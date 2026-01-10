@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Τυράκι - Βρες και Ακύρωσε Ανεπιθύμητες Συνδρομές</title>
+    <meta name="description" content="Βρες όλες τις συνδρομές σου. Το Τυράκι θα σε βοηθήσει να τις ακυρώσεις.">
+    <meta property="og:title" content="Τυράκι - Εντοπισμός & Ακύρωση Συνδρομών">
+    <meta property="og:description" content="Ανάλυσε τις τραπεζικές σου κινήσεις και βρες κρυφές συνδρομές. Δωρεάν και open source.">
+    <meta property="og:image" content="/images/og-image.png">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --border-color: #2a2a2a;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-primary: #ffffff;
+                --bg-secondary: #f5f5f5;
+                --bg-card: #ffffff;
+                --text-primary: #0a0a0a;
+                --text-secondary: #525252;
+                --text-muted: #a0a0a0;
+                --border-color: #e5e5e5;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 80px 20px 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .tagline {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 20px;
+            z-index: 100;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .progress-step.active {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: transparent;
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: currentColor;
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .progress-step.active .step-number,
+        .progress-step.completed .step-number {
+            background: white;
+            color: var(--accent-green);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Step Sections */
+        .step-section {
+            margin-bottom: 60px;
+            padding-top: 20px;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .step-badge {
+            background: var(--accent-green);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+        }
+
+        .step-time {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .step-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        /* Bank Instructions */
+        .bank-accordion {
+            margin-top: 16px;
+        }
+
+        .bank-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .bank-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .bank-header:hover {
+            background: var(--bg-card);
+        }
+
+        .bank-name {
+            font-weight: 600;
+        }
+
+        .bank-toggle {
+            color: var(--text-muted);
+        }
+
+        .bank-content {
+            padding: 16px;
+            display: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .bank-content.open {
+            display: block;
+        }
+
+        .bank-content ol {
+            margin-left: 20px;
+            color: var(--text-secondary);
+        }
+
+        .bank-content li {
+            margin-bottom: 8px;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            position: relative;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: var(--accent-green);
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .copy-btn:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Pricing Box */
+        .pricing-box {
+            background: linear-gradient(135deg, var(--accent-green), #16a34a);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .pricing-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        .pricing-box .price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pricing-box .price-note {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .progress-steps {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            .step-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">🧀</div>
+        <h1>Τυράκι</h1>
+        <p class="tagline">Βρες όλες τις συνδρομές σου. Θα σε βοηθήσουμε να τις ακυρώσεις.</p>
+        <span class="badge">Δωρεάν & Open Source</span>
+    </header>
+
+    <!-- Progress Bar -->
+    <nav class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-step active" data-step="1">
+                <span class="step-number">1</span>
+                <span>Εξαγωγή CSV</span>
+            </div>
+            <div class="progress-step" data-step="2">
+                <span class="step-number">2</span>
+                <span>Λήψη Project</span>
+            </div>
+            <div class="progress-step" data-step="3">
+                <span class="step-number">3</span>
+                <span>Εγκατάσταση Claude</span>
+            </div>
+            <div class="progress-step" data-step="4">
+                <span class="step-number">4</span>
+                <span>Ανάλυση</span>
+            </div>
+            <div class="progress-step" data-step="5">
+                <span class="step-number">5</span>
+                <span>Ακύρωση</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Step 1 -->
+        <section class="step-section" id="step1">
+            <div class="step-header">
+                <span class="step-badge">Βήμα 1</span>
+                <h2 class="step-title">Εξαγωγή Τραπεζικών Κινήσεων</h2>
+                <span class="step-time">3-5 λεπτά</span>
+            </div>
+            <div class="step-content">
+                <p>Εξάγαγε τις κινήσεις της κάρτας ή του λογαριασμού σου σε αρχείο CSV. Χρειάζονται τουλάχιστον 2-3 μήνες ιστορικό.</p>
+
+                <div class="bank-accordion">
+                    <div class="bank-item">
+                        <div class="bank-header" onclick="toggleBank(this)">
+                            <span class="bank-name">Alpha Bank</span>
+                            <span class="bank-toggle">▼</span>
+                        </div>
+                        <div class="bank-content">
+                            <ol>
+                                <li>Σύνδεση στο myAlpha web</li>
+                                <li>Κάρτες → Επιλογή κάρτας</li>
+                                <li>Κινήσεις → Προβολή περισσοτέρων</li>
+                                <li>Επιλογή περιόδου (3 μήνες)</li>
+                                <li>Εξαγωγή → CSV</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="bank-item">
+                        <div class="bank-header" onclick="toggleBank(this)">
+                            <span class="bank-name">Eurobank</span>
+                            <span class="bank-toggle">▼</span>
+                        </div>
+                        <div class="bank-content">
+                            <ol>
+                                <li>Σύνδεση στο Eurobank e-Banking</li>
+                                <li>Κάρτες → Κινήσεις κάρτας</li>
+                                <li>Φίλτρα → Επιλογή ημερομηνιών</li>
+                                <li>Εξαγωγή σε Excel/CSV</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="bank-item">
+                        <div class="bank-header" onclick="toggleBank(this)">
+                            <span class="bank-name">Τράπεζα Πειραιώς</span>
+                            <span class="bank-toggle">▼</span>
+                        </div>
+                        <div class="bank-content">
+                            <ol>
+                                <li>Σύνδεση στο Winbank</li>
+                                <li>Λογαριασμοί/Κάρτες → Κινήσεις</li>
+                                <li>Αναζήτηση → Ορισμός περιόδου</li>
+                                <li>Download → Μορφή CSV</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="bank-item">
+                        <div class="bank-header" onclick="toggleBank(this)">
+                            <span class="bank-name">Εθνική Τράπεζα (NBG)</span>
+                            <span class="bank-toggle">▼</span>
+                        </div>
+                        <div class="bank-content">
+                            <ol>
+                                <li>Σύνδεση στο i-bank</li>
+                                <li>Κάρτες → Κινήσεις</li>
+                                <li>Επιλογή χρονικού διαστήματος</li>
+                                <li>Εξαγωγή σε CSV</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="bank-item">
+                        <div class="bank-header" onclick="toggleBank(this)">
+                            <span class="bank-name">Optima Bank</span>
+                            <span class="bank-toggle">▼</span>
+                        </div>
+                        <div class="bank-content">
+                            <ol>
+                                <li>Σύνδεση στο Optima e-banking</li>
+                                <li>Κινήσεις λογαριασμού</li>
+                                <li>Φίλτρα ημερομηνιών</li>
+                                <li>Εξαγωγή CSV</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2 -->
+        <section class="step-section" id="step2">
+            <div class="step-header">
+                <span class="step-badge">Βήμα 2</span>
+                <h2 class="step-title">Λήψη του Project</h2>
+                <span class="step-time">2 λεπτά</span>
+            </div>
+            <div class="step-content">
+                <p>Κατέβασε το Τυράκι από το GitHub και βάλε το CSV αρχείο σου στον φάκελο <code>data/</code>.</p>
+
+                <div class="code-block">
+                    <code>git clone https://github.com/yourusername/tyraki.git</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+
+                <div class="code-block">
+                    <code>cd tyraki && mkdir -p data</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+
+                <p>Μετακίνησε το CSV αρχείο στον φάκελο <code>data/</code>:</p>
+
+                <div class="code-block">
+                    <code>mv ~/Downloads/κινήσεις.csv data/</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3 -->
+        <section class="step-section" id="step3">
+            <div class="step-header">
+                <span class="step-badge">Βήμα 3</span>
+                <h2 class="step-title">Εγκατάσταση Claude Code</h2>
+                <span class="step-time">5 λεπτά</span>
+            </div>
+            <div class="step-content">
+                <p>Το Τυράκι χρησιμοποιεί το Claude Code της Anthropic. Χρειάζεται συνδρομή Claude Pro ($20/μήνα).</p>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'mac')">Mac</button>
+                    <button class="tab" onclick="switchTab(event, 'windows')">Windows</button>
+                </div>
+
+                <div id="mac" class="tab-content active">
+                    <div class="code-block">
+                        <code>brew install anthropics/tap/claude-code</code>
+                        <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                    </div>
+
+                    <p>Ή με npm:</p>
+
+                    <div class="code-block">
+                        <code>npm install -g @anthropic-ai/claude-code</code>
+                        <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                    </div>
+                </div>
+
+                <div id="windows" class="tab-content">
+                    <div class="code-block">
+                        <code>npm install -g @anthropic-ai/claude-code</code>
+                        <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                    </div>
+
+                    <p>Απαιτείται Node.js 18+. Κατέβασε από <a href="https://nodejs.org">nodejs.org</a></p>
+                </div>
+
+                <p style="margin-top: 16px;">Μετά την εγκατάσταση, συνδέσου με τον λογαριασμό σου:</p>
+
+                <div class="code-block">
+                    <code>claude login</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4 -->
+        <section class="step-section" id="step4">
+            <div class="step-header">
+                <span class="step-badge">Βήμα 4</span>
+                <h2 class="step-title">Ανάλυση Συνδρομών</h2>
+                <span class="step-time">5-10 λεπτά</span>
+            </div>
+            <div class="step-content">
+                <p>Τρέξε το Claude Code στον φάκελο του project:</p>
+
+                <div class="code-block">
+                    <code>claude</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+
+                <p>Στη συνομιλία, πες:</p>
+
+                <div class="code-block">
+                    <code>Θέλω να βρω τις συνδρομές μου. Το CSV είναι στο data/</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+
+                <p>Το Claude θα αναλύσει τις κινήσεις σου και θα σε ρωτήσει για κάθε συνδρομή τι θέλεις να κάνεις:</p>
+                <ul style="margin-left: 20px; color: var(--text-secondary);">
+                    <li><strong>Ακύρωση</strong> - Θέλεις να την ακυρώσεις</li>
+                    <li><strong>Διατήρηση</strong> - Θέλεις να τη κρατήσεις</li>
+                    <li><strong>Έρευνα</strong> - Δεν είσαι σίγουρος</li>
+                </ul>
+
+                <div class="pricing-box">
+                    <h3>Freemium Μοντέλο</h3>
+                    <p>Δωρεάν για έως 5 συνδρομές</p>
+                    <div class="price">€3</div>
+                    <p class="price-note">Μία φορά - για να δεις όλες τις συνδρομές σου</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 5 -->
+        <section class="step-section" id="step5">
+            <div class="step-header">
+                <span class="step-badge">Βήμα 5</span>
+                <h2 class="step-title">Ακύρωση Συνδρομών</h2>
+                <span class="step-time">Εξαρτάται</span>
+            </div>
+            <div class="step-content">
+                <p>Το Claude θα δημιουργήσει μια αναφορά HTML με όλες τις συνδρομές σου και οδηγίες ακύρωσης για καθεμία.</p>
+
+                <p>Για υπηρεσίες που υποστηρίζονται, το Claude μπορεί να σε βοηθήσει να ακυρώσεις αυτοματοποιημένα μέσω browser automation.</p>
+
+                <p>Πες απλά:</p>
+
+                <div class="code-block">
+                    <code>Βοήθησέ με να ακυρώσω το Netflix</code>
+                    <button class="copy-btn" onclick="copyCode(this)">Αντιγραφή</button>
+                </div>
+
+                <p style="margin-top: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <strong>💡 Συμβουλή:</strong> Κράτα την αναφορά HTML για μελλοντική αναφορά. Περιέχει όλες τις πληροφορίες που χρειάζεσαι.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Δημιουργήθηκε με ❤️ στην Ελλάδα</p>
+        <p style="margin-top: 8px;">
+            <a href="https://github.com/yourusername/tyraki">GitHub</a> ·
+            <a href="mailto:support@tyraki.gr">Επικοινωνία</a>
+        </p>
+        <p style="margin-top: 16px; font-size: 0.8rem;">
+            Τα δεδομένα σου παραμένουν τοπικά. Δεν αποθηκεύουμε τίποτα.
+        </p>
+    </footer>
+
+    <script>
+        // Bank accordion toggle
+        function toggleBank(header) {
+            const content = header.nextElementSibling;
+            const toggle = header.querySelector('.bank-toggle');
+            content.classList.toggle('open');
+            toggle.textContent = content.classList.contains('open') ? '▲' : '▼';
+        }
+
+        // Copy code functionality
+        function copyCode(btn) {
+            const code = btn.previousElementSibling.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Αντιγράφηκε!';
+                setTimeout(() => {
+                    btn.textContent = 'Αντιγραφή';
+                }, 2000);
+            });
+        }
+
+        // Tab switching
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Progress tracking on scroll
+        const sections = document.querySelectorAll('.step-section');
+        const progressSteps = document.querySelectorAll('.progress-step');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const stepNum = entry.target.id.replace('step', '');
+                    progressSteps.forEach((step, index) => {
+                        if (index + 1 < stepNum) {
+                            step.classList.remove('active');
+                            step.classList.add('completed');
+                        } else if (index + 1 == stepNum) {
+                            step.classList.add('active');
+                            step.classList.remove('completed');
+                        } else {
+                            step.classList.remove('active', 'completed');
+                        }
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        sections.forEach(section => observer.observe(section));
+
+        // Click to scroll to step
+        progressSteps.forEach(step => {
+            step.addEventListener('click', () => {
+                const stepNum = step.dataset.step;
+                document.getElementById('step' + stepNum).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
