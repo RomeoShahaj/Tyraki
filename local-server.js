@@ -5,7 +5,7 @@ const path = require('path');
 const PORT = 3000;
 
 // Import API handlers
-const analyzeHandler = require('./api/analyze-local.js');
+const analyzeHandler = require('./api/analyze.js');
 const checkoutHandler = require('./api/create-checkout.js');
 const verifyHandler = require('./api/verify-payment.js');
 

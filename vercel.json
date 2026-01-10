@@ -2,10 +2,6 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/analyze",
-      "destination": "/api/analyze.js"
-    },
-    {
       "source": "/api/create-checkout",
       "destination": "/api/create-checkout.js"
     },
