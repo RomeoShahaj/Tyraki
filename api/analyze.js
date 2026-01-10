@@ -562,7 +562,7 @@ module.exports = async (req, res) => {
     } else {
       return res.status(400).json({
         error: 'Μη υποστηριζόμενος τύπος αρχείου',
-        message: 'Υποστηρίζονται CSV, Excel και PDF αρχεία',
+        message: 'Υποστηρίζονται CSV και PDF αρχεία',
       });
     }
 
