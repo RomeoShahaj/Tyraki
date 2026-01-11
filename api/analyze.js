@@ -454,6 +454,14 @@ const KNOWN_SERVICES = [
     category: 'other',
     avgCost: 55.0,
   },
+
+  // Banking Services
+  {
+    pattern: /χρέωση\s?προγράμματος\s?(premium|metal)|revolut\s?(premium|metal)/i,
+    name: 'Revolut Premium',
+    category: 'banking',
+    avgCost: 9.99,
+  },
 ];
 
 module.exports = async (req, res) => {
@@ -971,7 +979,8 @@ const MONTH_NAMES = {
   φεβ: '02',
   μαρ: '03',
   απρ: '04',
-  μαϊ: '05',
+  μαΐ: '05',  // U+0390 - Greek Small Letter Iota with Dialytika and Tonos (NFC - what's in PDF)
+  μαϊ: '05',  // U+03CA - Greek Small Letter Iota with Dialytika (alternative normalization)
   ιουν: '06',
   ιουλ: '07',
   αυγ: '08',
@@ -988,11 +997,15 @@ function extractMonth(dateStr) {
   // Normalize whitespace
   dateStr = dateStr.trim();
 
-  // Pattern 1: "Jul 13, 2025" or "July 13, 2025" (Revolut format)
-  const monthNamePattern1 = /([a-zα-ω]+)\s+(\d{1,2}),?\s+(\d{4})/i;
+  // Normalize Unicode to NFC (Canonical Decomposition, followed by Canonical Composition)
+  // This ensures consistent handling of accented Greek characters (e.g., μαΐ vs μαϊ)
+  dateStr = dateStr.normalize('NFC');
+
+  // Pattern 1: "Jul 13, 2025" or "July 13, 2025" or "Μαΐ 13, 2025" (Revolut format)
+  const monthNamePattern1 = /([a-zA-Zα-ωΑ-Ωά-ώΐΰ]+)\s+(\d{1,2}),?\s+(\d{4})/i;
   const match1 = dateStr.match(monthNamePattern1);
   if (match1) {
-    const monthName = match1[1].toLowerCase();
+    const monthName = match1[1].toLowerCase().normalize('NFC');
     const year = match1[3];
     const month = MONTH_NAMES[monthName];
 
@@ -1002,11 +1015,11 @@ function extractMonth(dateStr) {
     }
   }
 
-  // Pattern 2: "13 Jul 2025" or "13 July 2025"
-  const monthNamePattern2 = /(\d{1,2})\s+([a-zα-ω]+)\s+(\d{4})/i;
+  // Pattern 2: "13 Jul 2025" or "13 July 2025" or "13 Μαΐ 2025"
+  const monthNamePattern2 = /(\d{1,2})\s+([a-zA-Zα-ωΑ-Ωά-ώΐΰ]+)\s+(\d{4})/i;
   const match2 = dateStr.match(monthNamePattern2);
   if (match2) {
-    const monthName = match2[2].toLowerCase();
+    const monthName = match2[2].toLowerCase().normalize('NFC');
     const year = match2[3];
     const month = MONTH_NAMES[monthName];
 
@@ -1076,10 +1089,10 @@ function parsePDFText(text) {
     }
 
     // Check for date on this line first (to reset skip flag and capture date for multi-line txns)
-    // Pattern 1: "Apr 16, 2025" or "April 16, 2025" (Revolut format)
-    const lineDateCheck1 = line.match(/([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
-    // Pattern 2: "16 Apr 2025" (European text format)
-    const lineDateCheck2 = line.match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
+    // Pattern 1: "Apr 16, 2025" or "April 16, 2025" or "Μαΐ 16, 2025" (Revolut format)
+    const lineDateCheck1 = line.match(/([A-Za-zα-ωΑ-Ωά-ώΐΰ]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+    // Pattern 2: "16 Apr 2025" or "16 Μαΐ 2025" (European text format)
+    const lineDateCheck2 = line.match(/(\d{1,2})\s+([A-Za-zα-ωΑ-Ωά-ώΐΰ]{3,9})\s+(\d{4})/);
     // Pattern 3: Numeric format "15/01/2024" or "01-15-2024"
     const lineDateCheck3 = line.match(/(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{2,4})/);
     const hasDateOnLine = lineDateCheck1 || lineDateCheck2 || lineDateCheck3;
@@ -1136,7 +1149,7 @@ function parsePDFText(text) {
     // Transaction amounts usually have $ or - sign, balance is just a number at the end
     const amountPatterns = [
       // REVOLUT FORMAT - HIGHEST PRIORITY: €amount€balance (first amount is the transaction)
-      /€([\d.]+)€/, // €7.99€251.01 → captures 7.99 (the charge, not the balance)
+      /€([\d.]+)[-−]?€/, // €7.99€251.01 OR €7.99-€5.15 → captures 7.99 (the charge, not the balance)
 
       // Negative amounts with $ sign (most common for debits)
       /-\s*\$\s*([\d,]+\.\d{2})/, // -$29.99
