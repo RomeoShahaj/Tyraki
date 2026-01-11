@@ -1366,17 +1366,17 @@
                 <span>Δωρεάν για έως 5 συνδρομές</span>
             </div>
 
-            <h1>απλά<br><span class="highlight">ακύρωσέ τες</span></h1>
+            <h1>Απλά<br><span class="highlight">ακύρωσέ τες</span></h1>
 
             <p class="hero-subtitle">
-                Βρες και ακύρωσε ξεχασμένες συνδρομές. Ανέβασε τις κινήσεις σου και δες πού πάνε τα λεφτά σου.
+                Βρες και ακύρωσε ξεχασμένες συνδρομές. Μην αφήνεις να σου τρώνε το τυράκι!
             </p>
 
             <div class="upload-guidance">
                 <div class="guidance-icon">💡</div>
                 <div class="guidance-text">
                     <strong>Για τα καλύτερα αποτελέσματα:</strong>
-                    Ανέβασε αρχείο/α για <strong>2-3 μήνες</strong> των κινήσεών σου.
+                    Ανέβασε ένα αρχείο για <strong>2-3 μήνες</strong> των κινήσεών σου.
                     Περισσότεροι μήνες μπορεί να δείξουν παλιές, ήδη ακυρωμένες συνδρομές.
                 </div>
             </div>
@@ -1530,7 +1530,7 @@
                         <span class="testimonial-x-logo">𝕏</span>
                     </div>
                     <p class="testimonial-content">
-                        Skeptical ήμουν αλλά τα €3 άξιζαν 1000%. Βρήκε iCloud, YouTube Premium, LinkedIn Premium που ποτέ δεν χρησιμοποίησα 😅
+                         Ήμουν σκεπτικός αλλά τα €3 άξιζαν 1000%. Βρήκε iCloud, YouTube Premium, LinkedIn Premium που ποτέ δεν χρησιμοποίησα 😅
                     </p>
                     <div class="testimonial-savings">
                         💰 Εξοικονόμηση: €756/χρόνο
@@ -1697,6 +1697,74 @@
             }
         });
 
+        // Detect subscriptions from merged transactions (for multi-file uploads)
+        function detectSubscriptionsFromTransactions(transactions) {
+            const subscriptions = [];
+            const chargeGroups = new Map();
+
+            // Group transactions by normalized description
+            transactions.forEach(t => {
+                const desc = t.description.trim().toUpperCase();
+                if (!chargeGroups.has(desc)) {
+                    chargeGroups.set(desc, []);
+                }
+                chargeGroups.get(desc).push(t);
+            });
+
+            // Extract month from date string
+            function extractMonth(dateStr) {
+                if (!dateStr) return null;
+                // Handle "Apr 16, 2025" format
+                const monthNames = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+                const match1 = dateStr.match(/([a-z]+)\s+(\d+),?\s+(\d{4})/i);
+                if (match1) {
+                    const month = monthNames[match1[1].toLowerCase().substring(0,3)];
+                    return month ? `${match1[3]}-${month}` : null;
+                }
+                // Handle "16/04/2025" format
+                const match2 = dateStr.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+                if (match2) {
+                    return `${match2[3]}-${match2[2].padStart(2,'0')}`;
+                }
+                return null;
+            }
+
+            // Analyze each group
+            chargeGroups.forEach((txns, desc) => {
+                // Get unique months
+                const months = new Set();
+                txns.forEach(t => {
+                    const month = extractMonth(t.date);
+                    if (month) months.add(month);
+                });
+
+                // Must appear in 2+ different months
+                if (months.size < 2) return;
+
+                // Get costs and check consistency
+                const costs = txns.map(t => Math.abs(t.amount)).filter(c => c > 0 && c < 500);
+                if (costs.length === 0) return;
+
+                const avgCost = costs.reduce((sum, c) => sum + c, 0) / costs.length;
+                const variance = costs.reduce((sum, c) => sum + Math.pow(c - avgCost, 2), 0) / costs.length;
+                const stdDev = Math.sqrt(variance);
+                const cv = (stdDev / avgCost) * 100;
+
+                // Price must be consistent (< 10% variation)
+                if (cv > 10) return;
+
+                subscriptions.push({
+                    name: desc.substring(0, 30),
+                    monthly_cost: Math.round(avgCost * 100) / 100,
+                    occurrences: months.size,
+                    confidence: 'medium',
+                    needsConfirmation: true // Unknown charges need confirmation
+                });
+            });
+
+            return subscriptions;
+        }
+
         // Handle multiple file uploads
         async function handleFiles(files) {
             if (files.length === 0) return;
@@ -1722,9 +1790,10 @@
 
             try {
                 const allSubscriptions = [];
+                const allTransactions = []; // Collect raw transactions for multi-file merging
                 let totalTransactions = 0;
 
-                // Upload each file and collect subscriptions
+                // Upload each file and collect subscriptions AND transactions
                 for (let i = 0; i < files.length; i++) {
                     uploadTitle.textContent = `Ανάλυση αρχείου ${i + 1} από ${files.length}...`;
 
@@ -1735,6 +1804,10 @@
                         method: 'POST',
                         body: formData
                     });
+                    if (!response.ok) {
+                        const text = await response.text();
+                        throw new Error(`Server error: ${response.status} ${text}`);
+                    }
 
                     const data = await response.json();
 
@@ -1742,19 +1815,28 @@
                         throw new Error(data.message || data.error || 'Σφάλμα ανάλυσης');
                     }
 
-                    if (data.success && data.subscriptions) {
-                        allSubscriptions.push(...data.subscriptions);
+                    if (data.success) {
+                        if (data.subscriptions) {
+                            allSubscriptions.push(...data.subscriptions);
+                        }
+                        if (data.transactions) {
+                            allTransactions.push(...data.transactions);
+                        }
                         totalTransactions += data.transactions_analyzed || 0;
                     }
                 }
 
-                // Deduplicate subscriptions by name
-                const mergedSubscriptions = mergeDuplicateSubscriptions(allSubscriptions);
-
-                // Filter out non-recurring services (less than 2 occurrences)
-                const recurringSubscriptions = mergedSubscriptions.filter(sub => {
-                    return (sub.occurrences || 1) >= 2;
-                });
+                // For multiple files: detect subscriptions from merged transactions
+                let recurringSubscriptions;
+                if (files.length > 1 && allTransactions.length > 0) {
+                    recurringSubscriptions = detectSubscriptionsFromTransactions(allTransactions);
+                } else {
+                    // Single file: use server-detected subscriptions
+                    const mergedSubscriptions = mergeDuplicateSubscriptions(allSubscriptions);
+                    recurringSubscriptions = mergedSubscriptions.filter(sub => {
+                        return (sub.occurrences || 1) >= 2;
+                    });
+                }
 
                 // Check if there are unknown charges that need confirmation
                 const unknowns = recurringSubscriptions.filter(sub => sub.needsConfirmation);

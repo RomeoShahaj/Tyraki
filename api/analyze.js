@@ -817,6 +817,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       subscriptions,
+      transactions: transactions, // Return raw transactions for multi-file merging
       total_monthly: Math.round(totalMonthly * 100) / 100,
       total_yearly: Math.round(totalYearly * 100) / 100,
       count: subscriptions.length,
@@ -1053,6 +1054,13 @@ function parsePDFText(text) {
   // Try to find lines that look like transactions
   // Pattern: date + description + amount
   // Example: "15/01/2024 NETFLIX 12.99" or "01-15-2024 Spotify Premium €9.99"
+  // Also handles: "Apr 16, 2025" (Revolut format)
+
+  // Track last valid date for multi-line transactions (e.g., Revolut)
+  // Revolut PDFs have date on one line and amounts on another
+  let lastValidDate = '';
+  let lastValidDescription = '';
+  let skipUntilNewDate = false; // Flag to skip income transaction amounts
 
   for (const line of lines) {
     // Skip header lines
@@ -1067,10 +1075,70 @@ function parsePDFText(text) {
       continue;
     }
 
+    // Check for date on this line first (to reset skip flag and capture date for multi-line txns)
+    // Pattern 1: "Apr 16, 2025" or "April 16, 2025" (Revolut format)
+    const lineDateCheck1 = line.match(/([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+    // Pattern 2: "16 Apr 2025" (European text format)
+    const lineDateCheck2 = line.match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
+    // Pattern 3: Numeric format "15/01/2024" or "01-15-2024"
+    const lineDateCheck3 = line.match(/(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{2,4})/);
+    const hasDateOnLine = lineDateCheck1 || lineDateCheck2 || lineDateCheck3;
+
+    // If we see a new date, reset the skip flag and save the date/description
+    // This is crucial for multi-line transactions (Revolut) where date is on one line, amounts on another
+    if (hasDateOnLine) {
+      skipUntilNewDate = false;
+      // Update lastValidDate
+      if (lineDateCheck1) {
+        lastValidDate = lineDateCheck1[0];
+      } else if (lineDateCheck2) {
+        lastValidDate = lineDateCheck2[0];
+      } else if (lineDateCheck3) {
+        lastValidDate = lineDateCheck3[1];
+      }
+      // Capture description from date line (for multi-line transactions)
+      let lineDescTemp = line;
+      if (lineDateCheck1) {
+        lineDescTemp = lineDescTemp.replace(lineDateCheck1[0], '');
+      } else if (lineDateCheck2) {
+        lineDescTemp = lineDescTemp.replace(lineDateCheck2[0], '');
+      } else if (lineDateCheck3) {
+        lineDescTemp = lineDescTemp.replace(lineDateCheck3[0], '');
+      }
+      lineDescTemp = lineDescTemp.trim();
+      if (lineDescTemp.length > 2) {
+        lastValidDescription = lineDescTemp;
+      }
+    }
+
+    // Skip income-related lines (Money In) - we only care about expenses for subscriptions
+    const lineLower = line.toLowerCase();
+    if (
+      lineLower.includes('transfer from') ||
+      lineLower.includes('payment from') ||
+      lineLower.includes('received from') ||
+      lineLower.includes('μεταφορά από') || // Greek: "Transfer from"
+      lineLower.includes('εισερχόμενη') || // Greek: "Incoming"
+      lineLower.includes('κατάθεση') // Greek: "Deposit"
+    ) {
+      // This is income - skip it and mark to skip subsequent amount lines
+      // (lastValidDate already updated above if there was a date on this line)
+      skipUntilNewDate = true;
+      continue;
+    }
+
+    // Skip amount-only lines that belong to an income transaction
+    if (skipUntilNewDate && !hasDateOnLine) {
+      continue;
+    }
+
     // Try multiple amount patterns - PRIORITIZE transaction amounts over balances
     // Transaction amounts usually have $ or - sign, balance is just a number at the end
     const amountPatterns = [
-      // Negative amounts with $ sign (most common for debits) - HIGHEST PRIORITY
+      // REVOLUT FORMAT - HIGHEST PRIORITY: €amount€balance (first amount is the transaction)
+      /€([\d.]+)€/, // €7.99€251.01 → captures 7.99 (the charge, not the balance)
+
+      // Negative amounts with $ sign (most common for debits)
       /-\s*\$\s*([\d,]+\.\d{2})/, // -$29.99
       /\$\s*-\s*([\d,]+\.\d{2})/, // $-29.99
 
@@ -1134,19 +1202,43 @@ function parsePDFText(text) {
       continue;
     }
 
-    // Extract date (various formats)
-    const dateMatch = line.match(/(\d{1,2}[-\/\.]\d{1,2}[-\/\.]\d{2,4})/);
-    const date = dateMatch ? dateMatch[1] : '';
+    // Use date from this line or fall back to last valid date (for multi-line transactions)
+    // Date extraction and lastValidDate/lastValidDescription are already handled above
+    let date = '';
+    let dateMatchObj = null;
+
+    if (lineDateCheck1) {
+      date = lineDateCheck1[0];
+      dateMatchObj = lineDateCheck1;
+    } else if (lineDateCheck2) {
+      date = lineDateCheck2[0];
+      dateMatchObj = lineDateCheck2;
+    } else if (lineDateCheck3) {
+      date = lineDateCheck3[1];
+      dateMatchObj = lineDateCheck3;
+    } else if (lastValidDate) {
+      // No date on this line - use the last valid date (for Revolut multi-line format)
+      date = lastValidDate;
+    }
 
     // Description is everything between date and amount
     let description = line;
-    if (dateMatch) {
-      description = description.replace(dateMatch[0], '');
+    if (dateMatchObj) {
+      description = description.replace(dateMatchObj[0], '');
     }
     if (amountMatch) {
       description = description.replace(amountMatch[0], '');
     }
+    // Remove any trailing balance amount (Revolut format leaves balance at end)
+    // Match patterns like "70.85" or "€70.85" at the end of description
+    description = description.replace(/€?[\d,]+\.?\d*\s*$/, '');
     description = description.trim();
+
+    // For multi-line transactions, if description is too short (like "Card: ..." lines),
+    // use the description from the date line
+    if (description.length <= 2 && lastValidDescription) {
+      description = lastValidDescription;
+    }
 
     if (description.length > 2) {
       transactions.push({
