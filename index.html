@@ -131,6 +131,7 @@
             display: flex;
             gap: 32px;
             align-items: center;
+            margin-left: 550px;
         }
 
         .nav-links a {
@@ -182,7 +183,7 @@
 
         @media (max-width: 768px) {
             .language-switcher {
-                margin-left: auto;
+                margin-left:auto;
             }
         }
 
@@ -1395,12 +1396,13 @@
                 <a href="#pricing" data-i18n="nav.pricing">Τιμή</a>
                 <a href="#testimonials" data-i18n="nav.testimonials">Αποτελέσματα</a>
                 <a href="#turorial" data-i18n="nav.tutorial">Πώς λειτουργεί</a>
-                <div class="language-switcher">
+                
+            </div>
+            <div class="language-switcher">
                     <button class="lang-btn active" data-lang="el" onclick="switchLanguage('el')">ΕΛ</button>
                     <span class="lang-separator">/</span>
                     <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">EN</button>
                 </div>
-            </div>
         </div>
     </nav>
 
