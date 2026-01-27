@@ -17,10 +17,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Build base URL - VERCEL_URL doesn't include the scheme
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'https://tyraki.vercel.app';
+    // Always use canonical domain for cross-tab localStorage to work
+    const baseUrl = 'https://tyraki.vercel.app';
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
