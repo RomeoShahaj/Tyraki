@@ -22,14 +22,7 @@ module.exports = async (req, res) => {
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: 'Τυράκι Premium',
-              description: 'Ξεκλείδωμα όλων των συνδρομών',
-            },
-            unit_amount: 300, // €3.00 in cents
-          },
+          price: process.env.STRIPE_PRICE_ID,
           quantity: 1,
         },
       ],

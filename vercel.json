@@ -8,6 +8,10 @@
     {
       "source": "/api/verify-payment",
       "destination": "/api/verify-payment.js"
+    },
+    {
+      "source": "/api/webhook",
+      "destination": "/api/webhook.js"
     }
   ],
   "headers": [

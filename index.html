@@ -2382,10 +2382,10 @@
                     <div class="paywall-banner">
                         <h4>${t('results.paywall_title')}</h4>
                         <p>${t('results.paywall_desc', {count: hiddenCount})}</p>
-                        <a href="/api/create-checkout" class="paywall-button">
+                        <button class="paywall-button" onclick="redirectToCheckout()">
                             ${t('results.paywall_button')}
                             <span>→</span>
-                        </a>
+                        </button>
                     </div>
                 `;
             }
@@ -2915,6 +2915,28 @@
         function closeConfirmationModal() {
             document.getElementById('confirmationModal').classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        // Store analysis and redirect to checkout
+        function redirectToCheckout() {
+            // Store analysis results in localStorage before redirecting
+            const analysisData = {
+                subscriptions: currentSubscriptions,
+                timestamp: Date.now(),
+                total_monthly: currentSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0),
+                total_yearly: currentSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0) * 12,
+                count: currentSubscriptions.length
+            };
+
+            try {
+                localStorage.setItem('tyraki_pending_analysis', JSON.stringify(analysisData));
+                console.log('Analysis stored in localStorage:', analysisData);
+            } catch (e) {
+                console.error('Failed to store analysis in localStorage:', e);
+            }
+
+            // Redirect to checkout
+            window.location.href = '/api/create-checkout';
         }
 
         // Scroll reveal animations

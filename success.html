@@ -3,151 +3,594 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <title>Επιτυχής Πληρωμή - Τυράκι</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0a0a;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent-green: #22c55e;
-            --border-color: #2a2a2a;
+            --bg-primary: #faf8f5;
+            --bg-secondary: #f5f3f0;
+            --bg-card: #ffffff;
+            --text-primary: #2c2420;
+            --text-secondary: #6b6560;
+            --text-muted: #9a9590;
+            --accent: #d97757;
+            --accent-dim: #c25d3e;
+            --accent-glow: rgba(217, 119, 87, 0.12);
+            --border: #e8e5e1;
+            --border-light: #d4cfc9;
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.12);
         }
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg-primary: #ffffff;
-                --text-primary: #0a0a0a;
-                --text-secondary: #525252;
-                --border-color: #e5e5e5;
-            }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
             color: var(--text-primary);
+            line-height: 1.6;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+
+        /* Success Banner */
+        .success-banner {
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            color: white;
+            margin-bottom: 32px;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .success-banner h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-banner p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-state p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 16px;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .error-state h2 {
+            color: #ef4444;
+            margin-bottom: 8px;
+        }
+
+        .error-state p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: linear-gradient(135deg, var(--accent) 0%, #16a34a 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: white;
+            text-align: center;
+        }
+
+        .results-summary h3 {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .results-summary .amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .results-summary .monthly {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .results-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .results-stat {
+            text-align: center;
+        }
+
+        .results-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .results-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* Subscription List */
+        .subscriptions-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .subscriptions-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subscription-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .subscription-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .subscription-item:hover {
+            border-color: var(--border-light);
+        }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subscription-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            font-size: 1.2rem;
         }
-        .container {
-            text-align: center;
-            max-width: 500px;
+
+        .subscription-name {
+            font-weight: 600;
         }
-        .icon {
-            font-size: 5rem;
-            margin-bottom: 24px;
+
+        .subscription-category {
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 16px;
-            color: var(--accent-green);
+
+        .subscription-cost {
+            text-align: right;
         }
-        p {
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            line-height: 1.6;
+
+        .subscription-monthly {
+            font-weight: 600;
+            color: var(--accent);
         }
-        .session-box {
-            background: #1a1a1a;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
+
+        .subscription-yearly {
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
-        .session-label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-        .session-id {
-            font-family: monospace;
-            font-size: 1rem;
-            color: var(--accent-green);
-            word-break: break-all;
-            padding: 12px;
-            background: var(--bg-primary);
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        .copy-btn {
-            background: var(--accent-green);
+
+        /* Buttons */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--accent);
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
             font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
             cursor: pointer;
+            transition: all 0.2s;
             width: 100%;
         }
-        .copy-btn:hover {
-            opacity: 0.9;
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+            transform: translateY(-2px);
         }
-        .instructions {
-            text-align: left;
-            background: #141414;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-light);
+        }
+
+        /* No Data State */
+        .no-data-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .no-data-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .no-data-state h2 {
+            margin-bottom: 8px;
+        }
+
+        .no-data-state p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             margin-top: 24px;
         }
-        .instructions h3 {
-            margin-bottom: 12px;
-            font-size: 1rem;
+
+        /* Category icons */
+        .category-icons {
+            display: none;
         }
-        .instructions ol {
-            margin-left: 20px;
-            color: var(--text-secondary);
-        }
-        .instructions li {
-            margin-bottom: 8px;
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            .success-banner {
+                padding: 24px;
+            }
+
+            .results-stats {
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">✅</div>
-        <h1>Επιτυχής Πληρωμή!</h1>
-        <p>Ευχαριστούμε για την αγορά σου. Τώρα μπορείς να δεις όλες τις συνδρομές σου.</p>
-
-        <div class="session-box">
-            <div class="session-label">Το Session ID σου:</div>
-            <div class="session-id" id="sessionId">Φόρτωση...</div>
-            <button class="copy-btn" onclick="copySessionId()">Αντιγραφή Session ID</button>
+        <div class="header">
+            <a href="/" class="logo">
+                <span class="logo-icon">🧀</span>
+                <span>Τυράκι</span>
+            </a>
         </div>
 
-        <div class="instructions">
-            <h3>Επόμενα βήματα:</h3>
-            <ol>
-                <li>Αντέγραψε το Session ID παραπάνω</li>
-                <li>Επέστρεψε στο Claude Code</li>
-                <li>Δώσε του το Session ID για να ξεκλειδώσεις τις συνδρομές</li>
-            </ol>
+        <div id="content">
+            <!-- Content will be dynamically loaded -->
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Επαλήθευση πληρωμής...</p>
+            </div>
         </div>
     </div>
 
     <script>
-        // Get session_id from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id');
+        // Category icons mapping
+        const categoryIcons = {
+            streaming: '🎬',
+            telecom: '📱',
+            software: '💻',
+            gym: '🏋️',
+            utility: '⚡',
+            other: '📦',
+            unknown: '❓'
+        };
 
-        if (sessionId) {
-            document.getElementById('sessionId').textContent = sessionId;
-        } else {
-            document.getElementById('sessionId').textContent = 'Session ID δεν βρέθηκε';
+        // Category names in Greek
+        const categoryNames = {
+            streaming: 'Streaming',
+            telecom: 'Τηλεπικοινωνίες',
+            software: 'Λογισμικό',
+            gym: 'Γυμναστήριο',
+            utility: 'Κοινωφελή',
+            other: 'Άλλο',
+            unknown: 'Άγνωστο'
+        };
+
+        // Main initialization
+        async function init() {
+            const contentEl = document.getElementById('content');
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+
+            // Check if we have a session ID
+            if (!sessionId) {
+                showError('Δεν βρέθηκε Session ID', 'Η σελίδα αυτή απαιτεί έγκυρο Session ID από την πληρωμή.');
+                return;
+            }
+
+            try {
+                // Verify payment with Stripe
+                const response = await fetch(`/api/verify-payment?session_id=${encodeURIComponent(sessionId)}`);
+                const result = await response.json();
+
+                if (!result.verified) {
+                    showError('Η πληρωμή δεν επαληθεύτηκε', result.message || 'Παρακαλώ επικοινώνησε μαζί μας αν πιστεύεις ότι υπάρχει λάθος.');
+                    return;
+                }
+
+                // Payment verified! Now get the analysis data
+                let analysisData = null;
+
+                try {
+                    const storedData = localStorage.getItem('tyraki_pending_analysis');
+                    if (storedData) {
+                        analysisData = JSON.parse(storedData);
+
+                        // Check if data is not too old (24 hours)
+                        const MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
+                        if (Date.now() - analysisData.timestamp > MAX_AGE) {
+                            console.warn('Stored analysis data is too old, discarding');
+                            analysisData = null;
+                            localStorage.removeItem('tyraki_pending_analysis');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to parse stored analysis:', e);
+                }
+
+                // Show results
+                if (analysisData && analysisData.subscriptions && analysisData.subscriptions.length > 0) {
+                    showUnlockedResults(analysisData, result);
+                    // Clear the stored data after successful display
+                    localStorage.removeItem('tyraki_pending_analysis');
+                } else {
+                    showNoDataState(result);
+                }
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('Σφάλμα επαλήθευσης', 'Υπήρξε πρόβλημα με την επαλήθευση της πληρωμής. Παρακαλώ δοκίμασε ξανά.');
+            }
         }
 
-        function copySessionId() {
-            const sessionId = document.getElementById('sessionId').textContent;
-            navigator.clipboard.writeText(sessionId).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                btn.textContent = 'Αντιγράφηκε!';
-                setTimeout(() => {
-                    btn.textContent = 'Αντιγραφή Session ID';
-                }, 2000);
+        // Show unlocked results
+        function showUnlockedResults(analysisData, paymentResult) {
+            const { subscriptions, total_monthly, total_yearly, count } = analysisData;
+
+            let html = `
+                <div class="success-banner">
+                    <span class="success-icon">✅</span>
+                    <h1>Πληρωμή Επιτυχής!</h1>
+                    <p>Όλες οι συνδρομές σου είναι τώρα ξεκλειδωμένες</p>
+                </div>
+
+                <div class="results-summary">
+                    <h3>Συνολικό κόστος συνδρομών</h3>
+                    <div class="amount">€${total_yearly.toFixed(2)}/χρόνο</div>
+                    <div class="monthly">(€${total_monthly.toFixed(2)}/μήνα)</div>
+                    <div class="results-stats">
+                        <div class="results-stat">
+                            <div class="results-stat-value">${count}</div>
+                            <div class="results-stat-label">Συνδρομές</div>
+                        </div>
+                        <div class="results-stat">
+                            <div class="results-stat-value">🔓</div>
+                            <div class="results-stat-label">Ξεκλειδωμένες</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subscriptions-section">
+                    <h2>🔓 Όλες οι Συνδρομές σου</h2>
+                    <div class="subscription-list">
+            `;
+
+            subscriptions.forEach(sub => {
+                const icon = categoryIcons[sub.category] || categoryIcons.other;
+                const catName = categoryNames[sub.category] || categoryNames.other;
+
+                html += `
+                    <div class="subscription-item">
+                        <div class="subscription-info">
+                            <div class="subscription-icon">${icon}</div>
+                            <div>
+                                <div class="subscription-name">${sub.name}</div>
+                                <div class="subscription-category">${catName}</div>
+                            </div>
+                        </div>
+                        <div class="subscription-cost">
+                            <div class="subscription-monthly">€${sub.monthly_cost.toFixed(2)}/μήνα</div>
+                            <div class="subscription-yearly">€${(sub.monthly_cost * 12).toFixed(2)}/χρόνο</div>
+                        </div>
+                    </div>
+                `;
             });
+
+            html += `
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a href="/" class="btn-primary">
+                        Επιστροφή στην Αρχική
+                        <span>→</span>
+                    </a>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
         }
+
+        // Show no data state (payment verified but no stored analysis)
+        function showNoDataState(paymentResult) {
+            const html = `
+                <div class="success-banner">
+                    <span class="success-icon">✅</span>
+                    <h1>Πληρωμή Επιτυχής!</h1>
+                    <p>Η πληρωμή σου ολοκληρώθηκε με επιτυχία</p>
+                </div>
+
+                <div class="no-data-state">
+                    <div class="no-data-icon">📋</div>
+                    <h2>Δεν βρέθηκαν αποθηκευμένα δεδομένα</h2>
+                    <p>
+                        Η πληρωμή σου επαληθεύτηκε, αλλά δεν βρήκαμε την ανάλυση συνδρομών σου.
+                        Αυτό μπορεί να συμβεί αν έκλεισες το παράθυρο ή διέγραψες τα cookies.
+                    </p>
+                    <p style="margin-top: 16px; font-size: 0.9rem;">
+                        <strong>Unlock Code:</strong> ${paymentResult.unlockCode || 'N/A'}
+                    </p>
+                </div>
+
+                <div class="actions">
+                    <a href="/" class="btn-primary">
+                        Ξεκίνα Νέα Ανάλυση
+                        <span>→</span>
+                    </a>
+                    <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">
+                        Η νέα ανάλυση θα είναι δωρεάν με τον κωδικό σου
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // Show error state
+        function showError(title, message) {
+            const html = `
+                <div class="error-state">
+                    <div class="error-icon">❌</div>
+                    <h2>${title}</h2>
+                    <p>${message}</p>
+                </div>
+
+                <div class="actions">
+                    <a href="/" class="btn-secondary">
+                        Επιστροφή στην Αρχική
+                    </a>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // Initialize on page load
+        init();
     </script>
 </body>
 </html>
