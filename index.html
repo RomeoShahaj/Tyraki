@@ -2939,6 +2939,71 @@
             window.open('/api/create-checkout', '_blank');
         }
 
+        // Listen for payment verification from success page (cross-tab communication)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'tyraki_payment_verified' && e.newValue === 'true') {
+                unlockAllSubscriptions();
+                localStorage.removeItem('tyraki_payment_verified');
+            }
+        });
+
+        function unlockAllSubscriptions() {
+            // Remove paywall banner
+            const paywall = document.querySelector('.paywall-banner');
+            if (paywall) paywall.remove();
+
+            // Unlock all subscription items
+            document.querySelectorAll('.subscription-item.locked').forEach(item => {
+                item.classList.remove('locked');
+                // Add action buttons to newly unlocked items
+                const wrapper = item.closest('.subscription-item-wrapper');
+                const subName = item.dataset.subscription;
+                if (wrapper && !wrapper.querySelector('.subscription-actions')) {
+                    const actions = document.createElement('div');
+                    actions.className = 'subscription-actions';
+                    actions.innerHTML = `
+                        <button class="btn-categorize cancel" onclick="categorizeSubscription('${subName}', 'cancel')">${t('action.cancel')}</button>
+                        <button class="btn-categorize investigate" onclick="categorizeSubscription('${subName}', 'investigate')">${t('action.investigate')}</button>
+                        <button class="btn-categorize keep" onclick="categorizeSubscription('${subName}', 'keep')">${t('action.keep')}</button>
+                    `;
+                    wrapper.appendChild(actions);
+                }
+            });
+
+            // Add categorization section if not present
+            const modalBody = document.querySelector('.modal-body');
+            if (modalBody && !modalBody.querySelector('.categorization-section')) {
+                const catSection = document.createElement('div');
+                catSection.className = 'categorization-section';
+                catSection.innerHTML = `
+                    <h3>${t('results.categorization_title')}</h3>
+                    <p>${t('results.categorization_desc')}</p>
+                    <div class="savings-summary" id="savingsSummary" style="display: none;">
+                        <h4>${t('results.savings_title')}</h4>
+                        <div class="savings-amount" id="savingsMonthly">€0.00${t('results.per_month')}</div>
+                        <div class="savings-yearly" id="savingsYearly">(€0.00${t('results.per_year')})</div>
+                    </div>
+                    <button class="btn-next-step" id="btnShowGuide" onclick="showCancellationGuide()" disabled>
+                        <span>${t('results.next_step')}</span>
+                        <span>→</span>
+                    </button>
+                `;
+                modalBody.appendChild(catSection);
+            }
+
+            // Show success toast
+            showToast('✅ Ξεκλειδώθηκαν όλες οι συνδρομές!');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#22c55e;color:white;padding:12px 24px;border-radius:12px;font-weight:500;z-index:10000;animation:fadeIn 0.3s ease';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         // Scroll reveal animations
         const reveals = document.querySelectorAll('.reveal');
 

@@ -457,6 +457,8 @@
                     showUnlockedResults(analysisData, result);
                     // Clear the stored data after successful display
                     localStorage.removeItem('tyraki_pending_analysis');
+                    // Notify original tab that payment was verified
+                    localStorage.setItem('tyraki_payment_verified', 'true');
                 } else {
                     showNoDataState(result);
                 }
