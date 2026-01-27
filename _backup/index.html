@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+    <title>Τυράκι - Απλά Ακύρωσέ Τες</title>
+    <meta name="description" content="Βρες και ακύρωσε ξεχασμένες συνδρομές. Ανάλυση τραπεζικών κινήσεων σε 90 δευτερόλεπτα.">
+    <meta property="og:title" content="Τυράκι - Απλά Ακύρωσέ Τες">
+    <meta property="og:description" content="Βρες και ακύρωσε ξεχασμένες συνδρομές.">
+    <meta property="og:image" content="/images/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #faf8f5;
+            --bg-secondary: #f5f3f0;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fefdfb;
+            --text-primary: #2c2420;
+            --text-secondary: #6b6560;
+            --text-muted: #9a9590;
+            --accent: #d97757;
+            --accent-dim: #c25d3e;
+            --accent-glow: rgba(217, 119, 87, 0.12);
+            --border: #e8e5e1;
+            --border-light: #d4cfc9;
+            --primary: #d97757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Noise texture overlay  */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Gradient orb background */
+        .bg-orb {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-orb-1 {
+            top: -400px;
+            right: -200px;
+            background: var(--accent);
+        }
+
+        .bg-orb-2 {
+            bottom: -400px;
+            left: -200px;
+            background: #0ea5e9;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 24px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            margin-left: 550px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Language Switcher */
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+        }
+
+        .lang-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .lang-btn.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .lang-separator {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .language-switcher {
+                margin-left:auto;
+            }
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 24px 80px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(3rem, 10vw, 7rem);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 24px;
+            letter-spacing: -0.01em;
+            animation: fadeInUp 0.6s ease-out 0.1s both;
+        }
+
+        .hero h1 .highlight {
+            color: var(--accent);
+            position: relative;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            width: 100%;
+            max-width: 560px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 2px dashed var(--border-light);
+            border-radius: 20px;
+            padding: 48px 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+
+        .upload-zone:hover::before {
+            opacity: 1;
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .upload-zone h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .upload-formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .format-badge {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        /* Hero Stats */
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+            justify-content: center;
+            margin-top: 48px;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .hero-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Trust Line */
+        .trust-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            animation: fadeInUp 0.6s ease-out 0.5s both;
+        }
+
+        .trust-line svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .pricing-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #0ea5e9);
+        }
+
+        .pricing-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .pricing-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .pricing-value span {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .pricing-desc {
+            color: var(--text-secondary);
+            margin-top: 16px;
+            font-size: 1rem;
+        }
+
+        .pricing-free {
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-dim);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-top: 24px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Social Proof Section */
+        .social-proof {
+            padding: 80px 0 120px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .section-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Testimonials Grid */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .testimonial-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .testimonial-card:nth-child(1) { animation-delay: 0.1s; }
+        .testimonial-card:nth-child(2) { animation-delay: 0.2s; }
+        .testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+        .testimonial-card:nth-child(4) { animation-delay: 0.4s; }
+        .testimonial-card:nth-child(5) { animation-delay: 0.5s; }
+        .testimonial-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .testimonial-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-4px);
+        }
+
+        .testimonial-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .testimonial-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-author {
+            flex: 1;
+        }
+
+        .testimonial-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .testimonial-handle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .testimonial-x-logo {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .testimonial-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .testimonial-savings {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent-dim);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .testimonial-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 32px;
+            padding: 64px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 50%);
+            opacity: 0.5;
+        }
+
+        .cta-box h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .cta-box p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cta-button:hover {
+            background: var(--accent-dim);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 100px 20px 60px;
+            }
+
+            .hero-stats {
+                gap: 32px;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-box {
+                padding: 40px 24px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Scroll animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Loading State */
+        .upload-zone.loading {
+            pointer-events: none;
+        }
+
+        .upload-zone.loading .upload-icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* Results Summary */
+        .results-summary {
+            background: linear-gradient(135deg, var(--accent) 0%, #16a34a 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: white;
+            text-align: center;
+        }
+
+        .results-summary h3 {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .results-summary .amount {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .results-summary .monthly {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .results-stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .results-stat {
+            text-align: center;
+        }
+
+        .results-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .results-stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* Subscription List */
+        .subscription-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .subscription-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .subscription-item:hover {
+            border-color: var(--border-light);
+        }
+
+        .subscription-item.locked {
+            filter: blur(4px);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subscription-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .subscription-name {
+            font-weight: 600;
+        }
+
+        .subscription-category {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .subscription-cost {
+            text-align: right;
+        }
+
+        .subscription-monthly {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .subscription-yearly {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Paywall */
+        .paywall-banner {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .paywall-banner h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .paywall-banner p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .paywall-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .paywall-button:hover {
+            background: var(--accent-dim);
+            transform: translateY(-2px);
+        }
+
+        /* Error State */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        /* Categorization UI */
+        .categorization-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .categorization-section h3 {
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .categorization-section > p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-categorize {
+            flex: 1;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-categorize:hover {
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .btn-categorize.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-categorize.cancel.active {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .btn-categorize.investigate.active {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        .btn-categorize.keep.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .savings-summary {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(217, 119, 87, 0.08);
+            border: 1px solid rgba(217, 119, 87, 0.25);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .savings-summary h4 {
+            margin-bottom: 12px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .savings-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .savings-yearly {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .btn-next-step {
+            width: 100%;
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-next-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(217, 119, 87, 0.25);
+        }
+
+        .btn-next-step:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Subscription item with categorization */
+        .subscription-item-wrapper {
+            margin-bottom: 12px;
+        }
+
+        .subscription-item.categorized {
+            border-width: 2px;
+        }
+
+        .subscription-item.category-cancel {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .subscription-item.category-investigate {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .subscription-item.category-keep {
+            border-color: var(--primary);
+            background: rgba(217, 119, 87, 0.05);
+        }
+
+        /* Cancellation guide */
+        .cancellation-guide {
+            padding: 0;
+        }
+
+        .cancel-card {
+            padding: 20px;
+            margin-bottom: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .cancel-card h4 {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cancel-card p {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .cancel-card strong {
+            color: var(--text-primary);
+        }
+
+        .cancel-url {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .cancel-url:hover {
+            border-color: var(--primary);
+            transform: translateX(2px);
+        }
+
+        .guide-back-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 16px;
+        }
+
+        .guide-back-btn:hover {
+            border-color: var(--border-light);
+        }
+
+        /* Confirmation Modal */
+        .confirmation-modal {
+            max-width: 650px;
+        }
+
+        .confirmation-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .confirmation-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .confirmation-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .unknown-charge-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .unknown-charge-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .unknown-charge-item.confirmed {
+            border-color: var(--primary);
+            background: rgba(217, 119, 87, 0.05);
+        }
+
+        .unknown-charge-item.rejected {
+            border-color: var(--text-muted);
+            background: var(--bg-secondary);
+            opacity: 0.6;
+        }
+
+        .charge-info {
+            margin-bottom: 12px;
+        }
+
+        .charge-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .charge-details {
+            display: flex;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .charge-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-confirm-charge {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-confirm-charge:hover {
+            border-color: var(--border-light);
+        }
+
+        .btn-confirm-charge.yes {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-confirm-charge.yes:hover {
+            background: var(--accent-dim);
+        }
+
+        .btn-confirm-charge.no {
+            border-color: var(--text-muted);
+            color: var(--text-muted);
+        }
+
+        .btn-confirm-charge.no:hover {
+            background: var(--bg-secondary);
+        }
+
+        .btn-proceed-results {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-proceed-results:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(217, 119, 87, 0.25);
+        }
+
+        .btn-proceed-results:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Upload Guidance */
+        .upload-guidance {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(217, 119, 87, 0.08);
+            border: 1px solid rgba(217, 119, 87, 0.25);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .guidance-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .guidance-text {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .guidance-text strong {
+            color: var(--primary);
+        }
+
+        /* Trust Section */
+        .upload-trust {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trust-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .trust-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .trust-text strong {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .trust-text p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">🧀</span>
+                <span data-i18n="nav.logo">Τυράκι</span>
+            </a>
+            <div class="nav-links">
+                <a href="#pricing" data-i18n="nav.pricing">Τιμή</a>
+                <a href="#testimonials" data-i18n="nav.testimonials">Αποτελέσματα</a>
+                <a href="#turorial" data-i18n="nav.tutorial">Πώς λειτουργεί</a>
+                
+            </div>
+            <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="el" onclick="switchLanguage('el')">ΕΛ</button>
+                    <span class="lang-separator">/</span>
+                    <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">EN</button>
+                </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                <span data-i18n="hero.badge">Δωρεάν για έως 5 συνδρομές</span>
+            </div>
+
+            <h1><span data-i18n="hero.title">Απλά</span><br><span class="highlight" data-i18n="hero.title_highlight">ακύρωσέ τες</span></h1>
+
+            <p class="hero-subtitle" data-i18n="hero.subtitle">
+                Βρες και ακύρωσε ξεχασμένες συνδρομές. Μην αφήνεις να σου τρώνε το τυράκι!
+            </p>
+
+            <div class="upload-guidance">
+                <div class="guidance-icon">💡</div>
+                <div class="guidance-text">
+                    <strong data-i18n="guidance.title"></strong>
+                    <span data-i18n="guidance.text"></span>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <span class="upload-icon">📄</span>
+                <h3 data-i18n="upload.drag_title">Σύρε το αρχείο εδώ</h3>
+                <p data-i18n="upload.drag_subtitle">ή κάνε κλικ για να επιλέξεις</p>
+                <div class="upload-formats">
+                    <span class="format-badge">CSV</span>
+                    <span class="format-badge">PDF</span>
+                </div>
+                <input type="file" class="upload-input" id="fileInput" accept=".csv,.pdf,.xlsx,.xls" multiple>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">&lt;90"</div>
+                    <div class="hero-stat-label" data-i18n="hero.stat_analysis">Ανάλυση</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">€1,847</div>
+                    <div class="hero-stat-label" data-i18n="hero.stat_savings">Μέση εξοικονόμηση</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">100%</div>
+                    <div class="hero-stat-label" data-i18n="hero.stat_local">Τοπική ανάλυση</div>
+                </div>
+            </div>
+
+            <div class="upload-trust">
+                <div class="trust-item">
+                    <div class="trust-icon">🔒</div>
+                    <div class="trust-text">
+                        <strong data-i18n="trust.security_title">Ασφάλεια</strong>
+                        <p data-i18n="trust.security_desc">Τα αρχεία αναλύονται τοπικά και διαγράφονται αμέσως</p>
+                    </div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">⚡</div>
+                    <div class="trust-text">
+                        <strong data-i18n="trust.fast_title">Γρήγορο</strong>
+                        <p data-i18n="trust.fast_desc">Ανάλυση σε λιγότερο από 90 δευτερόλεπτα</p>
+                    </div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">📅</div>
+                    <div class="trust-text">
+                        <strong data-i18n="trust.months_title">2-3 Μήνες</strong>
+                        <p data-i18n="trust.months_desc">Χρησιμοποίησε πρόσφατα statements για ακριβή αποτελέσματα</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing reveal" id="pricing">
+        <div class="container">
+            <div class="pricing-card">
+                <div class="pricing-label" data-i18n="pricing.label">Μία φορά</div>
+                <div class="pricing-value"><span data-i18n="pricing.value">€3</span><span data-i18n="pricing.per_analysis">/ανάλυση</span></div>
+                <p class="pricing-desc" data-i18n="pricing.desc">Ξεκλείδωσε όλες τις συνδρομές σου</p>
+                <div class="pricing-free" data-i18n="pricing.free">✓ Δωρεάν για ≤5 συνδρομές</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="social-proof reveal" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2 data-i18n="testimonials.title">Τοίχος Εξοικονόμησης 💰</h2>
+                <p data-i18n="testimonials.subtitle">Δες πόσα εξοικονόμησαν άλλοι χρήστες</p>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΜΚ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Μαρία Κ.</div>
+                            <div class="testimonial-handle">@maria_kwnst</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                        Δεν πίστευα ότι είχα τόσες συνδρομές! Netflix, Spotify, 3 gym memberships που ξέχασα να ακυρώσω... Το Τυράκι τα βρήκε όλα 🔥
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €2,847/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 234</span>
+                        <span>🔄 45</span>
+                        <span>12 Δεκ 2024</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΓΠ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Γιώργος Π.</div>
+                            <div class="testimonial-handle">@giwrgos_pap</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                        Cosmote TV, Wind συνδρομή που δεν χρησιμοποιούσα, κάτι Adobe που είχα ξεχάσει από το 2021... €180/μήνα πήγαιναν χαμένα!
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €2,160/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 189</span>
+                        <span>🔄 38</span>
+                        <span>8 Δεκ 2024</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΕΛ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Ελένη Λ.</div>
+                            <div class="testimonial-handle">@eleni_leon</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                        Μου βρήκε 12 συνδρομές! Κράτησα μόνο 4. Η ακύρωση του γυμναστηρίου ήταν εφιάλτης αλλά το Τυράκι μου έδωσε τα βήματα 🙌
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €1,524/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 312</span>
+                        <span>🔄 67</span>
+                        <span>5 Δεκ 2024</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΝΜ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Νίκος Μ.</div>
+                            <div class="testimonial-handle">@nikos_mak</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                         Ήμουν σκεπτικός αλλά τα €3 άξιζαν 1000%. Βρήκε iCloud, YouTube Premium, LinkedIn Premium που ποτέ δεν χρησιμοποίησα 😅
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €756/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 156</span>
+                        <span>🔄 29</span>
+                        <span>2 Δεκ 2024</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΑΣ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Αντώνης Σ.</div>
+                            <div class="testimonial-handle">@antonis_sot</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                        Ρε παιδιά είχα 2 Netflix accounts 🤦‍♂️ Το ένα από τότε που χώρισα και ξέχασα να αλλάξω κάρτα. 2 χρόνια το πλήρωνα!
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €311/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 423</span>
+                        <span>🔄 89</span>
+                        <span>28 Νοε 2024</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-header">
+                        <div class="testimonial-avatar">ΚΒ</div>
+                        <div class="testimonial-author">
+                            <div class="testimonial-name">Κατερίνα Β.</div>
+                            <div class="testimonial-handle">@katerina_vas</div>
+                        </div>
+                        <span class="testimonial-x-logo">𝕏</span>
+                    </div>
+                    <p class="testimonial-content">
+                        Τέλειο για όποιον έχει χάσει τον έλεγχο με τις συνδρομές. Εγώ είχα 18 συνδρομές!!! Κράτησα 6. Τώρα ξέρω ακριβώς τι πληρώνω.
+                    </p>
+                    <div class="testimonial-savings">
+                        💰 Εξοικονόμηση: €3,240/χρόνο
+                    </div>
+                    <div class="testimonial-meta">
+                        <span>❤️ 567</span>
+                        <span>🔄 124</span>
+                        <span>25 Νοε 2024</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section reveal">
+        <div class="container">
+            <div class="cta-box">
+                <h2 data-i18n="cta.title">Έτοιμος να εξοικονομήσεις;</h2>
+                <p data-i18n="cta.subtitle">Ανέβασε τις κινήσεις σου και δες πού πάνε τα λεφτά σου</p>
+                <a href="#" class="cta-button" onclick="document.getElementById('uploadZone').scrollIntoView({behavior: 'smooth'}); return false;">
+                    <span data-i18n="cta.button">Ξεκίνα τώρα</span>
+                    <span>→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-inner">
+            <div class="footer-links">
+                <a href="/privacy.html" data-i18n="footer.privacy">Απόρρητο</a>
+                <a href="/terms.html" data-i18n="footer.terms">Όροι</a>
+                <a href="/faq.html" data-i18n="footer.faq">FAQ</a>
+                <a href="mailto:hello@tyraki.gr" data-i18n="footer.contact">Επικοινωνία</a>
+            </div>
+            <div class="footer-copy" data-i18n="footer.copyright">
+                © 2026 Τυράκι. Φτιάχτηκε με ❤️ στην Ελλάδα.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Results Modal -->
+    <div class="modal-overlay" id="resultsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 data-i18n="results.modal_title">🧀 Αποτελέσματα Ανάλυσης</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Results will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Unknown Subscriptions Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal confirmation-modal">
+            <button class="modal-close" onclick="closeConfirmationModal()">✕</button>
+            <div class="modal-body" id="confirmationModalBody">
+                <!-- Content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translations object
+        const translations = {
+            el: {
+                // Meta
+                'meta.title': 'Τυράκι - Βρες και Ακύρωσε Ξεχασμένες Συνδρομές',
+                'meta.description': 'Ανέβασε τις κινήσεις σου και βρες ξεχασμένες συνδρομές που σου τρώνε το τυράκι',
+                'meta.og_title': 'Τυράκι - Βρες και Ακύρωσε Ξεχασμένες Συνδρομές',
+                'meta.og_description': 'Ανέβασε τις κινήσεις σου και βρες ξεχασμένες συνδρομές που σου τρώνε το τυράκι',
+
+                // Navigation
+                'nav.logo': 'Τυράκι',
+                'nav.pricing': 'Τιμή',
+                'nav.testimonials': 'Αποτελέσματα',
+                'nav.tutorial': 'Πώς λειτουργεί',
+
+                // Hero Section
+                'hero.badge': 'Δωρεάν για έως 5 συνδρομές',
+                'hero.title': 'Απλά',
+                'hero.title_highlight': 'ακύρωσέ τες',
+                'hero.subtitle': 'Βρες και ακύρωσε ξεχασμένες συνδρομές. Μην αφήνεις να σου τρώνε το τυράκι!',
+                'hero.guidance_title': 'Για τα καλύτερα αποτελέσματα:',
+                'hero.guidance_text': 'Ανέβασε ένα αρχείο για {months} των κινήσεών σου. Περισσότεροι μήνες μπορεί να δείξουν παλιές, ήδη ακυρωμένες συνδρομές.',
+                'hero.months': '2-3 μήνες',
+
+                // Hero Stats
+                'hero.stat_analysis': 'Ανάλυση',
+                'hero.stat_savings': 'Μέση εξοικονόμηση',
+                'hero.stat_local': 'Τοπική ανάλυση',
+
+                // Upload Zone
+                'upload.drag_title': 'Σύρε το αρχείο εδώ',
+                'upload.drag_subtitle': 'ή κάνε κλικ για να επιλέξεις',
+                'upload.analyzing': 'Αναλύονται {count} αρχεί{plural}...',
+                'upload.file_progress': 'Ανάλυση αρχείου {current} από {total}...',
+
+                // Trust Items
+                'trust.security_title': 'Ασφάλεια',
+                'trust.security_desc': 'Τα αρχεία αναλύονται τοπικά και διαγράφονται αμέσως',
+                'trust.fast_title': 'Γρήγορο',
+                'trust.fast_desc': 'Ανάλυση σε λιγότερο από 90 δευτερόλεπτα',
+                'trust.months_title': '2-3 Μήνες',
+                'trust.months_desc': 'Χρησιμοποίησε πρόσφατα statements για ακριβή αποτελέσματα',
+
+                // Pricing
+                'pricing.label': 'Μία φορά',
+                'pricing.value': '€3',
+                'pricing.per_analysis': '/ανάλυση',
+                'pricing.desc': 'Ξεκλείδωσε όλες τις συνδρομές σου',
+                'pricing.free': '✓ Δωρεάν για ≤5 συνδρομές',
+
+                // Testimonials
+                'testimonials.title': 'Τοίχος Εξοικονόμησης 💰',
+                'testimonials.subtitle': 'Δες πόσα εξοικονόμησαν άλλοι χρήστες',
+                'testimonials.savings': 'Εξοικονόμηση: €{amount}/χρόνο',
+
+                // CTA Section
+                'cta.title': 'Έτοιμος να εξοικονομήσεις;',
+                'cta.subtitle': 'Ανέβασε τις κινήσεις σου και δες πού πάνε τα λεφτά σου',
+                'cta.button': 'Ξεκίνα τώρα',
+                'guidance.title': 'Για τα καλύτερα αποτελέσματα:',
+                'guidance.text': 'Ανέβασε ένα αρχείο για 2-3 μήνες των κινήσεών σου. Περισσότεροι μήνες μπορεί να δείξουν παλιές, ήδη ακυρωμένες συνδρομές.',
+
+                // Footer
+                'footer.privacy': 'Απόρρητο',
+                'footer.terms': 'Όροι',
+                'footer.faq': 'FAQ',
+                'footer.contact': 'Επικοινωνία',
+                'footer.copyright': '© 2026 Τυράκι. Φτιάχτηκε με ❤️ στην Ελλάδα.',
+
+                // Results Modal
+                'results.modal_title': '🧀 Αποτελέσματα Ανάλυσης',
+                'results.no_subscriptions': 'Δεν βρέθηκαν συνδρομές',
+                'results.no_subscriptions_desc': 'Δεν εντοπίσαμε επαναλαμβανόμενες χρεώσεις στις κινήσεις σου.',
+                'results.paywall_title': '🔒 Ξεκλείδωσε όλες τις συνδρομές σου',
+                'results.paywall_desc': 'Βρήκαμε {count} συνδρομές. Πλήρωσε μόνο €3 μία φορά για να δεις όλες και να αποκτήσεις το πλήρες cancellation guide.',
+                'results.paywall_button': 'Ξεκλείδωσε τώρα (€3)',
+                'results.free_subscriptions': 'Δωρεάν για ≤5 συνδρομές',
+                'results.title': 'Βρήκαμε {count} συνδρομ{plural} που σου κοστίζ{verb}:',
+                'results.per_month': '/μήνα',
+                'results.per_year': '/χρόνο',
+                'results.transactions_analyzed': 'Αναλύθηκαν {count} συναλλαγές',
+                'results.categorization_title': '📊 Κατηγοριοποίηση',
+                'results.categorization_desc': 'Βοήθησέ μας να βελτιώσουμε την ανίχνευση κατηγοριοποιώντας τις συνδρομές σου:',
+                'results.savings_title': '💰 Η εξοικονόμησή σου',
+                'results.next_step': 'Επόμενο βήμα',
+                'results.monthly': 'μηνιαίως',
+                'results.yearly': 'ετησίως',
+
+                // Categories
+                'category.streaming': 'Streaming',
+                'category.telecom': 'Τηλεπικοινωνίες',
+                'category.software': 'Λογισμικό',
+                'category.gym': 'Γυμναστήριο',
+                'category.utility': 'Κοινωφελή',
+                'category.other': 'Άλλο',
+                'category.unknown': 'Άγνωστο',
+
+                // Actions
+                'action.cancel': '❌ Ακύρωση',
+                'action.investigate': '🤔 Έρευνα',
+                'action.keep': '✅ Κράτηση',
+
+                // Cancellation Guide
+                'cancel.guide_title': 'Οδηγός Ακύρωσης για {name}',
+                'cancel.guide_subtitle': 'Ακολούθησε αυτά τα βήματα για να ακυρώσεις τη συνδρομή σου:',
+                'cancel.monthly_cost': 'Μηνιαίο κόστος: €{amount}',
+                'cancel.yearly_cost': 'Ετήσια εξοικονόμηση: €{amount}',
+                'cancel.instructions': 'Οδηγίες ακύρωσης',
+                'cancel.how_to_cancel': 'Πώς να ακυρώσεις',
+                'cancel.general_title': 'Γενικά βήματα ακύρωσης',
+                'cancel.general_steps': '1. Συνδέσου στον λογαριασμό σου\n2. Πήγαινε στις ρυθμίσεις ή στο προφίλ\n3. Βρες την ενότητα "Συνδρομή" ή "Χρεώσεις"\n4. Επίλεξε "Ακύρωση συνδρομής"\n5. Επιβεβαίωσε την ακύρωση',
+                'cancel.back_button': '← Πίσω στα αποτελέσματα',
+
+                // Confirmation Modal
+                'confirm.title': '🤔 Επιβεβαίωση Άγνωστων Χρεώσεων',
+                'confirm.subtitle': 'Βρήκαμε {count} επαναλαμβανόμεν{plural} χρέωσ{verb} που δεν αναγνωρίσαμε. Παρακαλούμε επιβεβαίωσε ποιες είναι συνδρομές:',
+                'confirm.no': 'Όχι',
+                'confirm.yes_subscription': 'Ναι, είναι συνδρομή',
+                'confirm.times': '{count} φορές',
+                'confirm.proceed': 'Συνέχεια στα αποτελέσματα',
+
+                // Error Messages
+                'error.generic': 'Κάτι πήγε στραβά',
+                'error.try_again': 'Δοκίμασε ξανά ή χρησιμοποίησε διαφορετικό αρχείο',
+                'error.server_error': 'Σφάλμα διακομιστή',
+                'error.analysis_failed': 'Σφάλμα ανάλυσης'
+            },
+            en: {
+                // Meta
+                'meta.title': 'Tyraki - Find and Cancel Forgotten Subscriptions',
+                'meta.description': 'Upload your bank statements and find forgotten subscriptions that are eating your cheese',
+                'meta.og_title': 'Tyraki - Find and Cancel Forgotten Subscriptions',
+                'meta.og_description': 'Upload your bank statements and find forgotten subscriptions that are eating your cheese',
+
+                // Navigation
+                'nav.logo': 'Tyraki',
+                'nav.pricing': 'Pricing',
+                'nav.testimonials': 'Results',
+                'nav.tutorial': 'How it works',
+
+                // Hero Section
+                'hero.badge': 'Free for up to 5 subscriptions',
+                'hero.title': 'Just',
+                'hero.title_highlight': 'cancel them',
+                'hero.subtitle': 'Find and cancel forgotten subscriptions. Don\'t let them eat your cheese!',
+                'hero.guidance_title': 'For best results:',
+                'hero.guidance_text': 'Upload a statement for {months} of your transactions. More months may show old, already-cancelled subscriptions.',
+                'hero.months': '2-3 months',
+
+                // Hero Stats
+                'hero.stat_analysis': 'Analysis',
+                'hero.stat_savings': 'Average savings',
+                'hero.stat_local': 'Local analysis',
+
+                // Upload Zone
+                'upload.drag_title': 'Drag your file here',
+                'upload.drag_subtitle': 'or click to select',
+                'upload.analyzing': 'Analyzing {count} file{plural}...',
+                'upload.file_progress': 'Analyzing file {current} of {total}...',
+
+                // Trust Items
+                'trust.security_title': 'Security',
+                'trust.security_desc': 'Files are analyzed locally and deleted immediately',
+                'trust.fast_title': 'Fast',
+                'trust.fast_desc': 'Analysis in less than 90 seconds',
+                'trust.months_title': '2-3 Months',
+                'trust.months_desc': 'Use recent statements for accurate results',
+
+                // Pricing
+                'pricing.label': 'One-time',
+                'pricing.value': '€3',
+                'pricing.per_analysis': '/analysis',
+                'pricing.desc': 'Unlock all your subscriptions',
+                'pricing.free': '✓ Free for ≤5 subscriptions',
+
+                // Testimonials
+                'testimonials.title': 'Savings Wall 💰',
+                'testimonials.subtitle': 'See how much other users saved',
+                'testimonials.savings': 'Savings: €{amount}/year',
+
+                // CTA Section
+                'cta.title': 'Ready to save?',
+                'cta.subtitle': 'Upload your transactions and see where your money goes',
+                'cta.button': 'Start now',
+                'guidance.title': 'For best results:',
+                'guidance.text': 'Upload a bank statement covering 2–3 months of activity. More months may include old subscriptions that have already been canceled.',
+
+                // Footer
+                'footer.privacy': 'Privacy',
+                'footer.terms': 'Terms',
+                'footer.faq': 'FAQ',
+                'footer.contact': 'Contact',
+                'footer.copyright': '© 2026 Tyraki. Made with ❤️ in Greece.',
+
+                // Results Modal
+                'results.modal_title': '🧀 Analysis Results',
+                'results.no_subscriptions': 'No subscriptions found',
+                'results.no_subscriptions_desc': 'We didn\'t detect any recurring charges in your transactions.',
+                'results.paywall_title': '🔒 Unlock all your subscriptions',
+                'results.paywall_desc': 'We found {count} subscriptions. Pay just €3 once to see them all and get the complete cancellation guide.',
+                'results.paywall_button': 'Unlock now (€3)',
+                'results.free_subscriptions': 'Free for ≤5 subscriptions',
+                'results.title': 'We found {count} subscription{plural} costing you:',
+                'results.per_month': '/month',
+                'results.per_year': '/year',
+                'results.transactions_analyzed': '{count} transactions analyzed',
+                'results.categorization_title': '📊 Categorization',
+                'results.categorization_desc': 'Help us improve detection by categorizing your subscriptions:',
+                'results.savings_title': '💰 Your savings',
+                'results.next_step': 'Next step',
+                'results.monthly': 'monthly',
+                'results.yearly': 'yearly',
+
+                // Categories
+                'category.streaming': 'Streaming',
+                'category.telecom': 'Telecom',
+                'category.software': 'Software',
+                'category.gym': 'Gym',
+                'category.utility': 'Utilities',
+                'category.other': 'Other',
+                'category.unknown': 'Unknown',
+
+                // Actions
+                'action.cancel': '❌ Cancel',
+                'action.investigate': '🤔 Investigate',
+                'action.keep': '✅ Keep',
+
+                // Cancellation Guide
+                'cancel.guide_title': 'Cancellation Guide for {name}',
+                'cancel.guide_subtitle': 'Follow these steps to cancel your subscription:',
+                'cancel.monthly_cost': 'Monthly cost: €{amount}',
+                'cancel.yearly_cost': 'Yearly savings: €{amount}',
+                'cancel.instructions': 'Cancellation instructions',
+                'cancel.how_to_cancel': 'How to cancel',
+                'cancel.general_title': 'General cancellation steps',
+                'cancel.general_steps': '1. Log in to your account\n2. Go to settings or profile\n3. Find the "Subscription" or "Billing" section\n4. Select "Cancel subscription"\n5. Confirm cancellation',
+                'cancel.back_button': '← Back to results',
+
+                // Confirmation Modal
+                'confirm.title': '🤔 Confirm Unknown Charges',
+                'confirm.subtitle': 'We found {count} recurring charge{plural} we didn\'t recognize. Please confirm which ones are subscriptions:',
+                'confirm.no': 'No',
+                'confirm.yes_subscription': 'Yes, it\'s a subscription',
+                'confirm.times': '{count} times',
+                'confirm.proceed': 'Continue to results',
+
+                // Error Messages
+                'error.generic': 'Something went wrong',
+                'error.try_again': 'Try again or use a different file',
+                'error.server_error': 'Server error',
+                'error.analysis_failed': 'Analysis failed'
+            }
+        };
+    </script>
+
+    <script>
+        // Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const resultsModal = document.getElementById('resultsModal');
+        const modalBody = document.getElementById('modalBody');
+
+        // i18n Helper Functions
+        function t(key, params = {}) {
+            const lang = localStorage.getItem('language') || 'el';
+            let text = translations[lang][key] || key;
+
+            Object.keys(params).forEach(param => {
+                text = text.replace(`{${param}}`, params[param]);
+            });
+
+            return text;
+        }
+
+        function detectBrowserLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.startsWith('el')) return 'el';
+            if (browserLang.startsWith('en')) return 'en';
+            return 'el'; // Default to Greek
+        }
+
+        function switchLanguage(lang) {
+            localStorage.setItem('language', lang);
+            applyLanguage(lang);
+        }
+
+        function applyLanguage(lang) {
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+
+            // Update meta tags
+            document.querySelector('title').textContent = t('meta.title');
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.content = t('meta.description');
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) ogTitle.content = t('meta.og_title');
+            const ogDesc = document.querySelector('meta[property="og:description"]');
+            if (ogDesc) ogDesc.content = t('meta.og_description');
+
+            // Update active button state
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
+            // Update category names object
+            Object.keys(categoryNames).forEach(key => {
+                categoryNames[key] = t(`category.${key}`);
+            });
+
+            // If results modal is open, refresh it
+            if (resultsModal && resultsModal.classList.contains('active')) {
+                const currentData = window.currentResultsData;
+                if (currentData) {
+                    showResults(currentData);
+                }
+            }
+        }
+
+        // Initialize language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedLang = localStorage.getItem('language') || detectBrowserLanguage();
+            applyLanguage(savedLang);
+        });
+
+        // Category icons
+        const categoryIcons = {
+            streaming: '🎬',
+            telecom: '📱',
+            software: '💻',
+            gym: '🏋️',
+            utility: '⚡',
+            other: '📦',
+            unknown: '❓'
+        };
+
+        // Category names in Greek
+        const categoryNames = {
+            streaming: 'Streaming',
+            telecom: 'Τηλεπικοινωνίες',
+            software: 'Λογισμικό',
+            gym: 'Γυμναστήριο',
+            utility: 'Κοινωφελή',
+            other: 'Άλλο',
+            unknown: 'Άγνωστο'
+        };
+
+        // Upload zone interactions
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                handleFiles(Array.from(files));
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFiles(Array.from(e.target.files));
+            }
+        });
+
+        // Detect subscriptions from merged transactions (for multi-file uploads)
+        function detectSubscriptionsFromTransactions(transactions) {
+            const subscriptions = [];
+            const chargeGroups = new Map();
+
+            // Group transactions by normalized description
+            transactions.forEach(t => {
+                const desc = t.description.trim().toUpperCase();
+                if (!chargeGroups.has(desc)) {
+                    chargeGroups.set(desc, []);
+                }
+                chargeGroups.get(desc).push(t);
+            });
+
+            // Extract month from date string
+            function extractMonth(dateStr) {
+                if (!dateStr) return null;
+                // Handle "Apr 16, 2025" format
+                const monthNames = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+                const match1 = dateStr.match(/([a-z]+)\s+(\d+),?\s+(\d{4})/i);
+                if (match1) {
+                    const month = monthNames[match1[1].toLowerCase().substring(0,3)];
+                    return month ? `${match1[3]}-${month}` : null;
+                }
+                // Handle "16/04/2025" format
+                const match2 = dateStr.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+                if (match2) {
+                    return `${match2[3]}-${match2[2].padStart(2,'0')}`;
+                }
+                return null;
+            }
+
+            // Analyze each group
+            chargeGroups.forEach((txns, desc) => {
+                // Get unique months
+                const months = new Set();
+                txns.forEach(t => {
+                    const month = extractMonth(t.date);
+                    if (month) months.add(month);
+                });
+
+                // Must appear in 2+ different months
+                if (months.size < 2) return;
+
+                // Get costs and check consistency
+                const costs = txns.map(t => Math.abs(t.amount)).filter(c => c > 0 && c < 500);
+                if (costs.length === 0) return;
+
+                const avgCost = costs.reduce((sum, c) => sum + c, 0) / costs.length;
+                const variance = costs.reduce((sum, c) => sum + Math.pow(c - avgCost, 2), 0) / costs.length;
+                const stdDev = Math.sqrt(variance);
+                const cv = (stdDev / avgCost) * 100;
+
+                // Price must be consistent (< 10% variation)
+                if (cv > 10) return;
+
+                subscriptions.push({
+                    name: desc.substring(0, 30),
+                    monthly_cost: Math.round(avgCost * 100) / 100,
+                    occurrences: months.size,
+                    confidence: 'medium',
+                    needsConfirmation: true // Unknown charges need confirmation
+                });
+            });
+
+            return subscriptions;
+        }
+
+        // Handle multiple file uploads
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+
+            // Show loading state
+            const uploadIcon = uploadZone.querySelector('.upload-icon');
+            const uploadTitle = uploadZone.querySelector('h3');
+            const originalIcon = uploadIcon.textContent;
+            const originalTitle = uploadTitle.textContent;
+
+            uploadZone.classList.add('loading');
+            uploadIcon.textContent = '⏳';
+            const currentLang = localStorage.getItem('language') || 'el';
+            const plural = currentLang === 'el'
+                ? (files.length === 1 ? 'ο' : 'α')
+                : (files.length === 1 ? '' : 's');
+            uploadTitle.textContent = t('upload.analyzing', {count: files.length, plural});
+
+            // Show warnings for file count
+            if (files.length === 1) {
+                console.warn('⚠️ Uploading only 1 month - subscriptions require recurring charges (2+ occurrences)');
+            } else if (files.length >= 4) {
+                console.warn(`⚠️ You uploaded ${files.length} files. For best results, use only the last 2-3 months.`);
+                console.warn('   More months may show old, already-cancelled subscriptions as "active".');
+                console.warn('   💡 Tip: Upload only recent statements for accurate detection.');
+            }
+
+            try {
+                const allSubscriptions = [];
+                const allTransactions = []; // Collect raw transactions for multi-file merging
+                let totalTransactions = 0;
+
+                // Upload each file and collect subscriptions AND transactions
+                for (let i = 0; i < files.length; i++) {
+                    uploadTitle.textContent = t('upload.file_progress', {current: i + 1, total: files.length});
+
+                    const formData = new FormData();
+                    formData.append('file', files[i]);
+
+                    const response = await fetch('/api/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!response.ok) {
+                        const text = await response.text();
+                        throw new Error(`Server error: ${response.status} ${text}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || data.error || t('error.analysis_failed'));
+                    }
+
+                    if (data.success) {
+                        if (data.subscriptions) {
+                            allSubscriptions.push(...data.subscriptions);
+                        }
+                        if (data.transactions) {
+                            allTransactions.push(...data.transactions);
+                        }
+                        totalTransactions += data.transactions_analyzed || 0;
+                    }
+                }
+
+                // For multiple files: detect subscriptions from merged transactions
+                let recurringSubscriptions;
+                if (files.length > 1 && allTransactions.length > 0) {
+                    recurringSubscriptions = detectSubscriptionsFromTransactions(allTransactions);
+                } else {
+                    // Single file: use server-detected subscriptions
+                    const mergedSubscriptions = mergeDuplicateSubscriptions(allSubscriptions);
+                    recurringSubscriptions = mergedSubscriptions.filter(sub => {
+                        return (sub.occurrences || 1) >= 2;
+                    });
+                }
+
+                // Check if there are unknown charges that need confirmation
+                const unknowns = recurringSubscriptions.filter(sub => sub.needsConfirmation);
+                const known = recurringSubscriptions.filter(sub => !sub.needsConfirmation);
+
+                if (unknowns.length > 0) {
+                    // Show confirmation modal FIRST
+                    pendingResults = {
+                        known: known,
+                        unknowns: unknowns,
+                        total_monthly: recurringSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0),
+                        total_yearly: recurringSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0) * 12,
+                        transactions_analyzed: totalTransactions
+                    };
+
+                    showConfirmationModal(unknowns);
+                } else {
+                    // No unknowns, show results directly
+                    const totalMonthly = known.reduce((sum, s) => sum + (s.monthly_cost || 0), 0);
+                    const totalYearly = totalMonthly * 12;
+
+                    showResults({
+                        success: true,
+                        subscriptions: known,
+                        total_monthly: Math.round(totalMonthly * 100) / 100,
+                        total_yearly: Math.round(totalYearly * 100) / 100,
+                        count: known.length,
+                        transactions_analyzed: totalTransactions
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            } finally {
+                // Reset upload zone
+                uploadZone.classList.remove('loading');
+                uploadIcon.textContent = originalIcon;
+                uploadTitle.textContent = originalTitle;
+                fileInput.value = '';
+            }
+        }
+
+        // Merge duplicate subscriptions
+        function mergeDuplicateSubscriptions(subscriptions) {
+            const map = new Map();
+            subscriptions.forEach(sub => {
+                if (!map.has(sub.name)) {
+                    map.set(sub.name, { ...sub });
+                } else {
+                    const existing = map.get(sub.name);
+                    // Average the costs
+                    const totalCost = existing.monthly_cost + sub.monthly_cost;
+                    existing.monthly_cost = Math.round((totalCost / 2) * 100) / 100;
+                    // SUM the occurrences (CRITICAL!)
+                    existing.occurrences = (existing.occurrences || 1) + (sub.occurrences || 1);
+                    // Update confidence if now recurring
+                    if (existing.occurrences >= 2) {
+                        existing.confidence = 'high';
+                    }
+                }
+            });
+            return Array.from(map.values());
+        }
+
+        // Global variable to store current subscriptions for categorization
+        let currentSubscriptions = [];
+        let subscriptionCategories = {};
+
+        // Confirmation state for unknown charges
+        let unknownChargesConfirmation = {};
+        let pendingResults = null;
+
+        // Show results in modal
+        function showResults(data) {
+            const { subscriptions, total_monthly, total_yearly, count } = data;
+
+            if (!subscriptions || subscriptions.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>${t('results.no_subscriptions')}</h3>
+                        <p>${t('results.no_subscriptions_desc')}</p>
+                    </div>
+                `;
+                openModal();
+                return;
+            }
+
+            // Store subscriptions globally for categorization
+            currentSubscriptions = subscriptions;
+            subscriptionCategories = {};
+
+            // Determine paywall
+            const FREE_LIMIT = 5;
+            const showPaywall = count > FREE_LIMIT;
+            const visibleCount = showPaywall ? 4 : count;
+            const hiddenCount = showPaywall ? count - 4 : 0;
+
+            // Build HTML
+            const lang = localStorage.getItem('language') || 'el';
+            const subPlural = lang === 'el' ? (count === 1 ? 'ή' : 'ές') : (count === 1 ? '' : 's');
+            const verbPlural = lang === 'el' ? (count === 1 ? 'ει' : 'ουν') : (count === 1 ? 's' : '');
+
+            let html = `
+                <div class="results-summary">
+                    <h3>${t('results.title', {count, plural: subPlural, verb: verbPlural})}</h3>
+                    <div class="amount">€${total_yearly.toFixed(2)}${t('results.per_year')}</div>
+                    <div class="monthly">(€${total_monthly.toFixed(2)}${t('results.per_month')})</div>
+                    <div class="results-stats">
+                        <div class="results-stat">
+                            <div class="results-stat-value">${count}</div>
+                            <div class="results-stat-label">${t('results.title', {count, plural: subPlural, verb: verbPlural}).split(' ')[1]}</div>
+                        </div>
+                        <div class="results-stat">
+                            <div class="results-stat-value">${data.transactions_analyzed || '—'}</div>
+                            <div class="results-stat-label">${t('results.transactions_analyzed', {count: data.transactions_analyzed || 0}).split(' ')[1]}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subscription-list">
+            `;
+
+            // Add subscription items with categorization buttons
+            subscriptions.forEach((sub, index) => {
+                const isLocked = showPaywall && index >= visibleCount;
+                const icon = categoryIcons[sub.category] || categoryIcons.other;
+                const catName = categoryNames[sub.category] || categoryNames.other;
+
+                html += `
+                    <div class="subscription-item-wrapper">
+                        <div class="subscription-item ${isLocked ? 'locked' : ''}" data-subscription="${sub.name}">
+                            <div class="subscription-info">
+                                <div class="subscription-icon">${icon}</div>
+                                <div>
+                                    <div class="subscription-name">${sub.name}</div>
+                                    <div class="subscription-category">${catName}</div>
+                                </div>
+                            </div>
+                            <div class="subscription-cost">
+                                <div class="subscription-monthly">€${sub.monthly_cost.toFixed(2)}${t('results.per_month')}</div>
+                                <div class="subscription-yearly">€${(sub.monthly_cost * 12).toFixed(2)}${t('results.per_year')}</div>
+                            </div>
+                        </div>
+                        ${!isLocked ? `
+                            <div class="subscription-actions">
+                                <button class="btn-categorize cancel" onclick="categorizeSubscription('${sub.name}', 'cancel')">
+                                    ${t('action.cancel')}
+                                </button>
+                                <button class="btn-categorize investigate" onclick="categorizeSubscription('${sub.name}', 'investigate')">
+                                    ${t('action.investigate')}
+                                </button>
+                                <button class="btn-categorize keep" onclick="categorizeSubscription('${sub.name}', 'keep')">
+                                    ${t('action.keep')}
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // Add paywall if needed
+            if (showPaywall) {
+                html += `
+                    <div class="paywall-banner">
+                        <h4>${t('results.paywall_title')}</h4>
+                        <p>${t('results.paywall_desc', {count: hiddenCount})}</p>
+                        <a href="/api/create-checkout" class="paywall-button">
+                            ${t('results.paywall_button')}
+                            <span>→</span>
+                        </a>
+                    </div>
+                `;
+            }
+
+            // Add categorization section (only for non-paywall subscriptions)
+            if (!showPaywall) {
+                html += `
+                    <div class="categorization-section">
+                        <h3>${t('results.categorization_title')}</h3>
+                        <p>${t('results.categorization_desc')}</p>
+
+                        <div class="savings-summary" id="savingsSummary" style="display: none;">
+                            <h4>${t('results.savings_title')}</h4>
+                            <div class="savings-amount" id="savingsMonthly">€0.00${t('results.per_month')}</div>
+                            <div class="savings-yearly" id="savingsYearly">(€0.00${t('results.per_year')})</div>
+                        </div>
+
+                        <button class="btn-next-step" id="btnShowGuide" onclick="showCancellationGuide()" disabled>
+                            <span>${t('results.next_step')}</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            modalBody.innerHTML = html;
+
+            // Store results data globally for language switching
+            window.currentResultsData = data;
+
+            openModal();
+        }
+
+        // Show error
+        function showError(message) {
+            modalBody.innerHTML = `
+                <div class="error-message">
+                    <p>❌ ${message}</p>
+                    <p style="margin-top: 8px; font-size: 0.85rem; opacity: 0.8;">${t('error.try_again')}</p>
+                </div>
+            `;
+            openModal();
+        }
+
+        // Categorization functions
+        function categorizeSubscription(subscriptionName, category) {
+            // Store the category
+            subscriptionCategories[subscriptionName] = category;
+
+            // Update UI for this subscription
+            const subscriptionItem = document.querySelector(`[data-subscription="${subscriptionName}"]`);
+            const buttons = subscriptionItem.parentElement.querySelectorAll('.btn-categorize');
+
+            // Remove all active classes
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Add active class to selected button
+            const selectedButton = subscriptionItem.parentElement.querySelector(`.btn-categorize.${category}`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+
+            // Update subscription item styling
+            subscriptionItem.classList.remove('category-cancel', 'category-investigate', 'category-keep');
+            subscriptionItem.classList.add('categorized', `category-${category}`);
+
+            // Update savings summary
+            updateSavingsSummary();
+        }
+
+        function updateSavingsSummary() {
+            // Calculate savings from "cancel" subscriptions
+            let totalMonthlySavings = 0;
+
+            currentSubscriptions.forEach(sub => {
+                if (subscriptionCategories[sub.name] === 'cancel') {
+                    totalMonthlySavings += sub.monthly_cost;
+                }
+            });
+
+            const totalYearlySavings = totalMonthlySavings * 12;
+
+            // Update UI
+            const savingsSummary = document.getElementById('savingsSummary');
+            const savingsMonthly = document.getElementById('savingsMonthly');
+            const savingsYearly = document.getElementById('savingsYearly');
+            const btnShowGuide = document.getElementById('btnShowGuide');
+
+            if (totalMonthlySavings > 0) {
+                savingsSummary.style.display = 'block';
+                savingsMonthly.textContent = `€${totalMonthlySavings.toFixed(2)}${t('results.per_month')}`;
+                savingsYearly.textContent = `(€${totalYearlySavings.toFixed(2)}${t('results.per_year')})`;
+                btnShowGuide.disabled = false;
+            } else {
+                savingsSummary.style.display = 'none';
+                btnShowGuide.disabled = true;
+            }
+        }
+
+        function showCancellationGuide() {
+            // Get all subscriptions marked for cancellation
+            const toCancel = currentSubscriptions.filter(sub =>
+                subscriptionCategories[sub.name] === 'cancel'
+            );
+
+            if (toCancel.length === 0) {
+                return;
+            }
+
+            // Build cancellation guide HTML
+            let html = `
+                <div class="cancellation-guide">
+                    <h2>🎯 ${t('cancel.how_to_cancel')}</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        ${t('cancel.guide_subtitle')}
+                    </p>
+            `;
+
+            toCancel.forEach(sub => {
+                const cancelInfo = CANCEL_URLS[sub.name];
+                const icon = categoryIcons[sub.category] || categoryIcons.other;
+
+                html += `
+                    <div class="cancel-card">
+                        <h4>
+                            <span>${icon}</span>
+                            ${sub.name}
+                        </h4>
+                        <p>
+                            <strong>${t('cancel.monthly_cost', {amount: sub.monthly_cost.toFixed(2)})}</strong>
+                            <span style="color: var(--text-secondary);">(${t('cancel.yearly_cost', {amount: (sub.monthly_cost * 12).toFixed(2)})})</span>
+                        </p>
+                `;
+
+                if (cancelInfo) {
+                    if (cancelInfo.url) {
+                        html += `
+                            <p><strong>${t('cancel.instructions')}</strong></p>
+                            <a href="${cancelInfo.url}" target="_blank" rel="noopener" class="cancel-url">
+                                ${t('action.cancel').replace('❌ ', '')} ${sub.name}
+                                <span>→</span>
+                            </a>
+                            ${cancelInfo.notes ? `<p style="margin-top: 12px; font-size: 0.85rem;">${cancelInfo.notes}</p>` : ''}
+                        `;
+                    } else {
+                        // Services without online cancellation (e.g., gyms)
+                        html += `
+                            <p><strong>${t('cancel.how_to_cancel')}</strong></p>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                                ${cancelInfo.notes}
+                            </p>
+                        `;
+                    }
+                } else {
+                    html += `
+                        <p><strong>${t('cancel.general_title')}</strong></p>
+                        <p style="font-size: 0.85rem;">
+                            ${t('cancel.general_steps').replace(/\n/g, '<br>')}
+                        </p>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            html += `
+                    <button class="guide-back-btn" onclick="location.reload()">
+                        ${t('cancel.back_button')}
+                    </button>
+                </div>
+            `;
+
+            modalBody.innerHTML = html;
+        }
+
+        // Cancel URLs mapping (from common-services.md)
+        const CANCEL_URLS = {
+            // Streaming & Entertainment
+            'Netflix': {
+                url: 'https://www.netflix.com/cancelplan',
+                notes: 'Εύκολη ακύρωση μέσω ρυθμίσεων λογαριασμού. Αμέση εφαρμογή.'
+            },
+            'Spotify': {
+                url: 'https://www.spotify.com/account',
+                notes: 'Μετάβαση στο "Change plan" και επιλογή "Cancel Premium".'
+            },
+            'Spotify Premium': {
+                url: 'https://www.spotify.com/account',
+                notes: 'Μετάβαση στο "Change plan" και επιλογή "Cancel Premium".'
+            },
+            'YouTube Premium': {
+                url: 'https://www.youtube.com/paid_memberships',
+                notes: 'Στην ενότητα Subscriptions, επιλέξτε Deactivate.'
+            },
+            'YouTube TV': {
+                url: 'https://tv.youtube.com/settings',
+                notes: 'Πρέπει πρώτα να κάνετε pause ή να ακυρώσετε.'
+            },
+            'Hulu': {
+                url: 'https://account.hulu.com',
+                notes: 'Αναζητήστε το κουμπί "Cancel".'
+            },
+            'Disney+': {
+                url: 'https://www.disneyplus.com/account',
+                notes: 'Στο Account, επιλέξτε "Billing details" > "Cancel subscription".'
+            },
+            'HBO Max': {
+                url: 'https://account.hbomax.com',
+                notes: 'Εξαρτάται από την πηγή χρέωσης (direct vs third-party).'
+            },
+            'Apple TV+': {
+                url: 'https://appleid.apple.com',
+                notes: 'Μετάβαση στις Subscriptions.'
+            },
+            'Amazon Prime': {
+                url: 'https://www.amazon.com/primecentral',
+                notes: 'Προσοχή: Θα προσπαθήσουν να σας κρατήσουν με προσφορές retention.'
+            },
+            'Paramount+': {
+                url: 'https://www.paramountplus.com/account',
+                notes: 'Εύκολη ακύρωση.'
+            },
+            'Peacock': {
+                url: 'https://www.peacocktv.com/account',
+                notes: 'Στα Plan Details.'
+            },
+
+            // AI & Developer Tools
+            'ChatGPT Plus': {
+                url: 'https://chat.openai.com/settings',
+                notes: 'Στην ενότητα Subscription.'
+            },
+            'Claude Pro': {
+                url: 'https://claude.ai/settings',
+                notes: 'Στην ενότητα Subscription.'
+            },
+            'Midjourney': {
+                url: 'https://www.midjourney.com/account',
+                notes: 'Κάτω από Manage Sub.'
+            },
+            'GitHub Copilot': {
+                url: 'https://github.com/settings/copilot',
+                notes: 'Στην ενότητα Subscription.'
+            },
+            'Replit': {
+                url: 'https://replit.com/account',
+                notes: 'Στην ενότητα Subscription.'
+            },
+            'Cursor': {
+                url: 'https://cursor.sh/settings',
+                notes: 'Στην ενότητα Subscription.'
+            },
+            'ElevenLabs': {
+                url: 'https://elevenlabs.io/subscription',
+                notes: 'Στο προφίλ σας.'
+            },
+            'Railway': {
+                url: 'https://railway.app/account/billing',
+                notes: 'Ελέγξτε πρώτα τη χρήση σας.'
+            },
+            'Vercel': {
+                url: 'https://vercel.com/account',
+                notes: 'Διαφορετική διαδικασία για Team vs Personal.'
+            },
+
+            // Productivity
+            'Notion': {
+                url: 'https://www.notion.so/my-account',
+                notes: 'Κάτω από Plans.'
+            },
+            'Superhuman': {
+                url: 'https://superhuman.com/settings',
+                notes: 'Απαιτείται email.'
+            },
+            'Dropbox': {
+                url: 'https://www.dropbox.com/account/plan',
+                notes: 'Προσοχή: Προσφορές retention.'
+            },
+            '1Password': {
+                url: 'https://1password.com/account',
+                notes: 'Ελέγξτε αν είναι Family ή Individual.'
+            },
+            'Todoist': {
+                url: 'https://todoist.com/app/settings/subscription',
+                notes: 'Εύκολη ακύρωση.'
+            },
+            'Evernote': {
+                url: 'https://www.evernote.com/account',
+                notes: 'Προσοχή: Dark patterns (δύσκολη ακύρωση).'
+            },
+
+            // Social & Communication
+            'X Premium': {
+                url: 'https://twitter.com/settings/subscriptions',
+                notes: 'Κάτω από Monetization.'
+            },
+            'Discord Nitro': {
+                url: 'https://discord.com/settings/subscriptions',
+                notes: 'Εύκολη ακύρωση.'
+            },
+            'LinkedIn Premium': {
+                url: 'https://www.linkedin.com/premium/cancel',
+                notes: 'Προσοχή: Πολλές οθόνες retention.'
+            },
+            'Slack': {
+                url: 'https://slack.com/account/settings',
+                notes: 'Μόνο ο Workspace Admin μπορεί να ακυρώσει.'
+            },
+
+            // News & Media
+            'NYTimes': {
+                url: 'https://www.nytimes.com/subscription',
+                notes: '⚠️ Ορισμένα πλάνα απαιτούν τηλεφωνική επικοινωνία: 1-800-591-9233'
+            },
+            'WSJ': {
+                url: 'https://www.wsj.com/account',
+                notes: '⚠️ Ενδέχεται να απαιτείται τηλεφωνική επικοινωνία.'
+            },
+            'Washington Post': {
+                url: 'https://www.washingtonpost.com/my-account',
+                notes: 'Κάτω από Subscription.'
+            },
+            'The Athletic': {
+                url: 'https://theathletic.com/account',
+                notes: 'Κάτω από Membership.'
+            },
+            'Substack': {
+                url: 'https://substack.com/account/settings',
+                notes: 'Ξεχωριστή ακύρωση ανά publication.'
+            },
+
+            // Music & Audio
+            'Apple Music': {
+                url: 'https://music.apple.com/account/subscriptions',
+                notes: 'Ή από Settings > [Your Name] > Subscriptions > Apple Music.'
+            },
+            'Tidal': {
+                url: 'https://listen.tidal.com/settings/subscription',
+                notes: 'Στις ρυθμίσεις λογαριασμού.'
+            },
+
+            // Cloud Storage
+            'iCloud': {
+                url: 'https://www.icloud.com/settings',
+                notes: 'Settings > [Your Name] > iCloud > Manage Storage > Change Storage Plan.'
+            },
+            'Google One': {
+                url: 'https://one.google.com/settings',
+                notes: 'Επιλέξτε "Cancel membership" στις ρυθμίσεις.'
+            },
+            'Google Drive': {
+                url: 'https://one.google.com/settings',
+                notes: 'Η Google Drive χρησιμοποιεί Google One για συνδρομές.'
+            },
+
+            // Fitness (Dark Pattern Warnings)
+            'ClassPass': {
+                url: 'https://classpass.com/account',
+                notes: 'Προσοχή: Τα credits λήγουν μετά την ακύρωση.'
+            },
+            'Peloton': {
+                url: 'https://www.onepeloton.com/membership',
+                notes: 'Διαφορετική διαδικασία για App vs Equipment συνδρομές.'
+            },
+            'Planet Fitness': {
+                url: null,
+                notes: '⚠️ Απαιτείται προσωπική επίσκεψη στο home club σας. Δεν γίνεται online ακύρωση.'
+            },
+            'LA Fitness': {
+                url: null,
+                notes: '⚠️ Απαιτείται προσωπική επίσκεψη ή συστημένη επιστολή με 30ήμερη προειδοποίηση.'
+            },
+            '24 Hour Fitness': {
+                url: null,
+                notes: '⚠️ Τηλέφωνο: 1-800-432-6348. Προσοχή: Retention scripts.'
+            },
+            'Equinox': {
+                url: null,
+                notes: '⚠️ Απαιτείται συστημένη επιστολή με 45ήμερη προειδοποίηση. Contract trap!'
+            },
+            'Anytime Fitness': {
+                url: null,
+                notes: '⚠️ Διαφέρει ανά franchise. Ελέγξτε το συμβόλαιό σας.'
+            }
+        };
+
+        // Modal controls
+        function openModal() {
+            resultsModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            resultsModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close modal on overlay click
+        resultsModal.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && resultsModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Confirmation Modal Functions
+        function showConfirmationModal(unknowns) {
+            unknownChargesConfirmation = {};
+
+            const lang = localStorage.getItem('language') || 'el';
+            const chargePlural = lang === 'el' ? (unknowns.length === 1 ? 'η' : 'ες') : (unknowns.length === 1 ? '' : 's');
+            const verbPlural = lang === 'el' ? (unknowns.length === 1 ? 'η' : 'εις') : (unknowns.length === 1 ? '' : 's');
+
+            let html = `
+                <div class="confirmation-header">
+                    <h2>${t('confirm.title')}</h2>
+                    <p>${t('confirm.subtitle', {count: unknowns.length, plural: chargePlural, verb: verbPlural})}</p>
+                </div>
+
+                <div class="unknown-charge-list">
+            `;
+
+            unknowns.forEach((charge, index) => {
+                // Clean up description for display
+                const displayName = charge.name.length > 50
+                    ? charge.name.substring(0, 47) + '...'
+                    : charge.name;
+
+                html += `
+                    <div class="unknown-charge-item" data-charge="${charge.name.replace(/"/g, '&quot;')}">
+                        <div class="charge-info">
+                            <div class="charge-name">${displayName}</div>
+                            <div class="charge-details">
+                                <span>💰 €${charge.monthly_cost.toFixed(2)}${t('results.per_month')}</span>
+                                <span>🔄 ${t('confirm.times', {count: charge.occurrences})}</span>
+                            </div>
+                        </div>
+                        <div class="charge-actions">
+                            <button class="btn-confirm-charge"
+                                    onclick="confirmCharge('${charge.name.replace(/'/g, "\\'")}', false)">
+                                ❌ ${t('confirm.no')}
+                            </button>
+                            <button class="btn-confirm-charge"
+                                    onclick="confirmCharge('${charge.name.replace(/'/g, "\\'")}', true)">
+                                ✅ ${t('confirm.yes_subscription')}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+
+                <button class="btn-proceed-results" id="btnProceedResults" onclick="proceedToResults()" disabled>
+                    ${t('confirm.proceed')}
+                </button>
+            `;
+
+            document.getElementById('confirmationModalBody').innerHTML = html;
+            document.getElementById('confirmationModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function confirmCharge(chargeName, isSubscription) {
+            unknownChargesConfirmation[chargeName] = isSubscription;
+
+            // Update UI
+            const chargeItem = document.querySelector(`[data-charge="${chargeName.replace(/"/g, '&quot;')}"]`);
+            if (!chargeItem) return;
+
+            const buttons = chargeItem.querySelectorAll('.btn-confirm-charge');
+
+            buttons.forEach(btn => btn.classList.remove('yes', 'no'));
+
+            if (isSubscription) {
+                chargeItem.classList.add('confirmed');
+                chargeItem.classList.remove('rejected');
+                buttons[1].classList.add('yes');
+            } else {
+                chargeItem.classList.add('rejected');
+                chargeItem.classList.remove('confirmed');
+                buttons[0].classList.add('no');
+            }
+
+            // Check if all unknowns have been answered
+            const allAnswered = pendingResults.unknowns.every(u =>
+                unknownChargesConfirmation.hasOwnProperty(u.name)
+            );
+
+            document.getElementById('btnProceedResults').disabled = !allAnswered;
+        }
+
+        function proceedToResults() {
+            // Filter unknowns based on user confirmation
+            const confirmedUnknowns = pendingResults.unknowns.filter(u =>
+                unknownChargesConfirmation[u.name] === true
+            );
+
+            // Combine known + confirmed unknowns
+            const allSubscriptions = [...pendingResults.known, ...confirmedUnknowns];
+
+            // Recalculate totals
+            const totalMonthly = allSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0);
+            const totalYearly = totalMonthly * 12;
+
+            // Close confirmation modal
+            closeConfirmationModal();
+
+            // Show final results
+            showResults({
+                success: true,
+                subscriptions: allSubscriptions,
+                total_monthly: Math.round(totalMonthly * 100) / 100,
+                total_yearly: Math.round(totalYearly * 100) / 100,
+                count: allSubscriptions.length,
+                transactions_analyzed: pendingResults.transactions_analyzed
+            });
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Scroll reveal animations
+        const reveals = document.querySelectorAll('.reveal');
+
+        const revealOnScroll = () => {
+            reveals.forEach(el => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                const revealPoint = 150;
+
+                if (elementTop < windowHeight - revealPoint) {
+                    el.classList.add('visible');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+    </script>
+</body>
+</html>

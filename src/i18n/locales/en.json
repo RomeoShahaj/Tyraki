@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "title": "Tyraki - Find and Cancel Forgotten Subscriptions",
+    "description": "Upload your bank statements and find forgotten subscriptions that are eating your cheese"
+  },
+  "nav": {
+    "logo": "Tyraki",
+    "pricing": "Pricing",
+    "testimonials": "Results",
+    "tutorial": "How it works"
+  },
+  "hero": {
+    "badge": "Free for up to 5 subscriptions",
+    "title": "Just",
+    "title_highlight": "cancel them",
+    "subtitle": "Find and cancel forgotten subscriptions. Don't let them eat your cheese!",
+    "stat_analysis": "Analysis",
+    "stat_savings": "Average savings",
+    "stat_local": "Local analysis"
+  },
+  "guidance": {
+    "title": "For best results:",
+    "text": "Upload a bank statement covering 2–3 months of activity. More months may include old subscriptions that have already been canceled."
+  },
+  "upload": {
+    "drag_title": "Drag your file here",
+    "drag_subtitle": "or click to select",
+    "analyzing": "Analyzing {{count}} files...",
+    "analyzing_one": "Analyzing {{count}} file...",
+    "file_progress": "Analyzing file {{current}} of {{total}}..."
+  },
+  "trust": {
+    "security_title": "Security",
+    "security_desc": "Files are analyzed locally and deleted immediately",
+    "fast_title": "Fast",
+    "fast_desc": "Analysis in less than 90 seconds",
+    "months_title": "2-3 Months",
+    "months_desc": "Use recent statements for accurate results"
+  },
+  "pricing": {
+    "label": "One-time",
+    "value": "€3",
+    "per_analysis": "/analysis",
+    "desc": "Unlock all your subscriptions",
+    "free": "✓ Free for ≤5 subscriptions"
+  },
+  "testimonials": {
+    "title": "Savings Wall 💰",
+    "subtitle": "See how much other users saved"
+  },
+  "cta": {
+    "title": "Ready to save?",
+    "subtitle": "Upload your transactions and see where your money goes",
+    "button": "Start now"
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "copyright": "© 2026 Tyraki. Made with ❤️ in Greece."
+  },
+  "results": {
+    "modal_title": "🧀 Analysis Results",
+    "no_subscriptions": "No subscriptions found",
+    "no_subscriptions_desc": "We didn't detect any recurring charges in your transactions.",
+    "paywall_title": "🔒 Unlock all your subscriptions",
+    "paywall_desc": "We found {{count}} subscriptions. Pay just €3 once to see them all and get the complete cancellation guide.",
+    "paywall_button": "Unlock now (€3)",
+    "title": "We found {{count}} subscriptions costing you:",
+    "title_one": "We found {{count}} subscription costing you:",
+    "per_month": "/month",
+    "per_year": "/year",
+    "transactions_analyzed": "{{count}} transactions analyzed",
+    "categorization_title": "📊 Categorization",
+    "categorization_desc": "Help us improve detection by categorizing your subscriptions:",
+    "savings_title": "💰 Your savings",
+    "next_step": "Next step",
+    "monthly": "monthly",
+    "yearly": "yearly",
+    "subscriptions": "subscriptions"
+  },
+  "category": {
+    "streaming": "Streaming",
+    "telecom": "Telecom",
+    "software": "Software",
+    "gym": "Gym",
+    "utility": "Utilities",
+    "other": "Other",
+    "unknown": "Unknown"
+  },
+  "action": {
+    "cancel": "❌ Cancel",
+    "investigate": "🤔 Investigate",
+    "keep": "✅ Keep"
+  },
+  "cancel_guide": {
+    "title": "Cancellation Guide for {{name}}",
+    "subtitle": "Follow these steps to cancel your subscription:",
+    "monthly_cost": "Monthly cost: €{{amount}}",
+    "yearly_cost": "Yearly savings: €{{amount}}",
+    "instructions": "Cancellation instructions",
+    "how_to_cancel": "How to cancel",
+    "general_title": "General cancellation steps",
+    "general_steps": "1. Log in to your account\n2. Go to settings or profile\n3. Find the \"Subscription\" or \"Billing\" section\n4. Select \"Cancel subscription\"\n5. Confirm cancellation",
+    "back_button": "← Back to results"
+  },
+  "confirm": {
+    "title": "🤔 Confirm Unknown Charges",
+    "subtitle": "We found {{count}} recurring charges we didn't recognize. Please confirm which ones are subscriptions:",
+    "subtitle_one": "We found {{count}} recurring charge we didn't recognize. Please confirm if it's a subscription:",
+    "no": "No",
+    "yes_subscription": "Yes, it's a subscription",
+    "times": "{{count}} times",
+    "proceed": "Continue to results"
+  },
+  "error": {
+    "generic": "Something went wrong",
+    "try_again": "Try again or use a different file",
+    "server_error": "Server error",
+    "analysis_failed": "Analysis failed"
+  },
+  "success": {
+    "title": "Payment Successful!",
+    "description": "Thank you for your purchase. You can now see all your subscriptions.",
+    "session_label": "Your Session ID:",
+    "copy_button": "Copy Session ID",
+    "copied": "Copied!",
+    "not_found": "Session ID not found",
+    "next_steps": "Next steps:",
+    "step1": "Copy the Session ID above",
+    "step2": "Return to Claude Code",
+    "step3": "Give it the Session ID to unlock the subscriptions"
+  },
+  "cancel_page": {
+    "title": "Payment Cancelled",
+    "description": "The payment was not completed. You can try again whenever you want.",
+    "retry": "Try Again",
+    "return": "Return",
+    "remember": "Remember:",
+    "point1": "The first 5 subscriptions are free",
+    "point2": "The payment is only €3, one-time",
+    "point3": "Your data always stays local",
+    "point4": "You can continue with the free subscriptions"
+  }
+}

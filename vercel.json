@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "devCommand": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/api/create-checkout",
@@ -8,6 +11,14 @@
     {
       "source": "/api/verify-payment",
       "destination": "/api/verify-payment.js"
+    },
+    {
+      "source": "/api/analyze",
+      "destination": "/api/analyze.js"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
