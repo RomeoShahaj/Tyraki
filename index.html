@@ -1769,6 +1769,7 @@
                 'results.title': 'Βρήκαμε {count} συνδρομ{plural} που σου κοστίζ{verb}:',
                 'results.per_month': '/μήνα',
                 'results.per_year': '/χρόνο',
+                'results.hidden': 'Κρυφό',
                 'results.transactions_analyzed': 'Αναλύθηκαν {count} συναλλαγές',
                 'results.categorization_title': '📊 Κατηγοριοποίηση',
                 'results.categorization_desc': 'Βοήθησέ μας να βελτιώσουμε την ανίχνευση κατηγοριοποιώντας τις συνδρομές σου:',
@@ -1894,6 +1895,7 @@
                 'results.title': 'We found {count} subscription{plural} costing you:',
                 'results.per_month': '/month',
                 'results.per_year': '/year',
+                'results.hidden': 'Hidden',
                 'results.transactions_analyzed': '{count} transactions analyzed',
                 'results.categorization_title': '📊 Categorization',
                 'results.categorization_desc': 'Help us improve detection by categorizing your subscriptions:',
@@ -2280,6 +2282,8 @@
         // Global variable to store current subscriptions for categorization
         let currentSubscriptions = [];
         let subscriptionCategories = {};
+        // Private storage for hidden subscriptions (not globally accessible)
+        let _hiddenSubscriptions = [];
 
         // Confirmation state for unknown charges
         let unknownChargesConfirmation = {};
@@ -2301,15 +2305,19 @@
                 return;
             }
 
-            // Store subscriptions globally for categorization
-            currentSubscriptions = subscriptions;
-            subscriptionCategories = {};
-
             // Determine paywall
             const FREE_LIMIT = 5;
             const showPaywall = count > FREE_LIMIT;
             const visibleCount = showPaywall ? 4 : count;
             const hiddenCount = showPaywall ? count - 4 : 0;
+
+            // Split subscriptions - only visible ones go to globals (security: prevent inspect element reveal)
+            const visibleSubs = subscriptions.slice(0, visibleCount);
+            _hiddenSubscriptions = showPaywall ? subscriptions.slice(visibleCount) : [];
+
+            // Store only visible subscriptions globally for categorization
+            currentSubscriptions = visibleSubs;
+            subscriptionCategories = {};
 
             // Build HTML
             const lang = localStorage.getItem('language') || 'el';
@@ -2336,15 +2344,14 @@
                 <div class="subscription-list">
             `;
 
-            // Add subscription items with categorization buttons
-            subscriptions.forEach((sub, index) => {
-                const isLocked = showPaywall && index >= visibleCount;
+            // Add visible subscription items with categorization buttons
+            visibleSubs.forEach((sub) => {
                 const icon = categoryIcons[sub.category] || categoryIcons.other;
                 const catName = categoryNames[sub.category] || categoryNames.other;
 
                 html += `
                     <div class="subscription-item-wrapper">
-                        <div class="subscription-item ${isLocked ? 'locked' : ''}" data-subscription="${sub.name}">
+                        <div class="subscription-item" data-subscription="${sub.name}">
                             <div class="subscription-info">
                                 <div class="subscription-icon">${icon}</div>
                                 <div>
@@ -2357,22 +2364,41 @@
                                 <div class="subscription-yearly">€${(sub.monthly_cost * 12).toFixed(2)}${t('results.per_year')}</div>
                             </div>
                         </div>
-                        ${!isLocked ? `
-                            <div class="subscription-actions">
-                                <button class="btn-categorize cancel" onclick="categorizeSubscription('${sub.name}', 'cancel')">
-                                    ${t('action.cancel')}
-                                </button>
-                                <button class="btn-categorize investigate" onclick="categorizeSubscription('${sub.name}', 'investigate')">
-                                    ${t('action.investigate')}
-                                </button>
-                                <button class="btn-categorize keep" onclick="categorizeSubscription('${sub.name}', 'keep')">
-                                    ${t('action.keep')}
-                                </button>
-                            </div>
-                        ` : ''}
+                        <div class="subscription-actions">
+                            <button class="btn-categorize cancel" onclick="categorizeSubscription('${sub.name}', 'cancel')">
+                                ${t('action.cancel')}
+                            </button>
+                            <button class="btn-categorize investigate" onclick="categorizeSubscription('${sub.name}', 'investigate')">
+                                ${t('action.investigate')}
+                            </button>
+                            <button class="btn-categorize keep" onclick="categorizeSubscription('${sub.name}', 'keep')">
+                                ${t('action.keep')}
+                            </button>
+                        </div>
                     </div>
                 `;
             });
+
+            // Add placeholder items for hidden subscriptions (no real data exposed)
+            for (let i = 0; i < hiddenCount; i++) {
+                html += `
+                    <div class="subscription-item-wrapper">
+                        <div class="subscription-item locked">
+                            <div class="subscription-info">
+                                <div class="subscription-icon">🔒</div>
+                                <div>
+                                    <div class="subscription-name">••••••••••</div>
+                                    <div class="subscription-category">${t('results.hidden')}</div>
+                                </div>
+                            </div>
+                            <div class="subscription-cost">
+                                <div class="subscription-monthly">€•.••${t('results.per_month')}</div>
+                                <div class="subscription-yearly">€••.••${t('results.per_year')}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
             html += '</div>';
 
@@ -2413,8 +2439,12 @@
 
             modalBody.innerHTML = html;
 
-            // Store results data globally for language switching
-            window.currentResultsData = data;
+            // Store results data globally for language switching (only visible subscriptions exposed)
+            window.currentResultsData = {
+                ...data,
+                subscriptions: visibleSubs,
+                hiddenCount: hiddenCount
+            };
 
             openModal();
         }
@@ -2919,13 +2949,17 @@
 
         // Store analysis and redirect to checkout
         function redirectToCheckout() {
+            // Combine visible and hidden subscriptions for localStorage storage
+            // (needed for success page to access full analysis after payment)
+            const allSubscriptions = [...currentSubscriptions, ..._hiddenSubscriptions];
+
             // Store analysis results in localStorage before redirecting
             const analysisData = {
-                subscriptions: currentSubscriptions,
+                subscriptions: allSubscriptions,
                 timestamp: Date.now(),
-                total_monthly: currentSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0),
-                total_yearly: currentSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0) * 12,
-                count: currentSubscriptions.length
+                total_monthly: allSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0),
+                total_yearly: allSubscriptions.reduce((sum, s) => sum + (s.monthly_cost || 0), 0) * 12,
+                count: allSubscriptions.length
             };
 
             try {
@@ -2952,23 +2986,55 @@
             const paywall = document.querySelector('.paywall-banner');
             if (paywall) paywall.remove();
 
-            // Unlock all subscription items
-            document.querySelectorAll('.subscription-item.locked').forEach(item => {
-                item.classList.remove('locked');
-                // Add action buttons to newly unlocked items
-                const wrapper = item.closest('.subscription-item-wrapper');
-                const subName = item.dataset.subscription;
-                if (wrapper && !wrapper.querySelector('.subscription-actions')) {
-                    const actions = document.createElement('div');
-                    actions.className = 'subscription-actions';
-                    actions.innerHTML = `
-                        <button class="btn-categorize cancel" onclick="categorizeSubscription('${subName}', 'cancel')">${t('action.cancel')}</button>
-                        <button class="btn-categorize investigate" onclick="categorizeSubscription('${subName}', 'investigate')">${t('action.investigate')}</button>
-                        <button class="btn-categorize keep" onclick="categorizeSubscription('${subName}', 'keep')">${t('action.keep')}</button>
-                    `;
-                    wrapper.appendChild(actions);
+            // Check if there are hidden subscriptions to reveal
+            if (_hiddenSubscriptions.length > 0) {
+                // Add hidden subscriptions back to visible data
+                currentSubscriptions = [...currentSubscriptions, ..._hiddenSubscriptions];
+                window.currentResultsData.subscriptions = currentSubscriptions;
+                window.currentResultsData.hiddenCount = 0;
+
+                // Find and remove placeholder locked items
+                document.querySelectorAll('.subscription-item.locked').forEach(item => {
+                    const wrapper = item.closest('.subscription-item-wrapper');
+                    if (wrapper) wrapper.remove();
+                });
+
+                // Render the previously hidden subscriptions with real data
+                const subscriptionList = document.querySelector('.subscription-list');
+                if (subscriptionList) {
+                    _hiddenSubscriptions.forEach(sub => {
+                        const icon = categoryIcons[sub.category] || categoryIcons.other;
+                        const catName = categoryNames[sub.category] || categoryNames.other;
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'subscription-item-wrapper';
+                        wrapper.innerHTML = `
+                            <div class="subscription-item" data-subscription="${sub.name}">
+                                <div class="subscription-info">
+                                    <div class="subscription-icon">${icon}</div>
+                                    <div>
+                                        <div class="subscription-name">${sub.name}</div>
+                                        <div class="subscription-category">${catName}</div>
+                                    </div>
+                                </div>
+                                <div class="subscription-cost">
+                                    <div class="subscription-monthly">€${sub.monthly_cost.toFixed(2)}${t('results.per_month')}</div>
+                                    <div class="subscription-yearly">€${(sub.monthly_cost * 12).toFixed(2)}${t('results.per_year')}</div>
+                                </div>
+                            </div>
+                            <div class="subscription-actions">
+                                <button class="btn-categorize cancel" onclick="categorizeSubscription('${sub.name}', 'cancel')">${t('action.cancel')}</button>
+                                <button class="btn-categorize investigate" onclick="categorizeSubscription('${sub.name}', 'investigate')">${t('action.investigate')}</button>
+                                <button class="btn-categorize keep" onclick="categorizeSubscription('${sub.name}', 'keep')">${t('action.keep')}</button>
+                            </div>
+                        `;
+                        subscriptionList.appendChild(wrapper);
+                    });
                 }
-            });
+
+                // Clear private storage
+                _hiddenSubscriptions = [];
+            }
 
             // Add categorization section if not present
             const modalBody = document.querySelector('.modal-body');
