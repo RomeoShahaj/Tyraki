@@ -2935,8 +2935,8 @@
                 console.error('Failed to store analysis in localStorage:', e);
             }
 
-            // Redirect to checkout
-            window.location.href = '/api/create-checkout';
+            // Open checkout in new tab to preserve localStorage data
+            window.open('/api/create-checkout', '_blank');
         }
 
         // Scroll reveal animations
