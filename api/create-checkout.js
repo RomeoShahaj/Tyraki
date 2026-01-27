@@ -17,6 +17,11 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Build base URL - VERCEL_URL doesn't include the scheme
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'https://tyraki.vercel.app';
+
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -27,8 +32,8 @@ module.exports = async (req, res) => {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.VERCEL_URL || 'https://tyraki.vercel.app'}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.VERCEL_URL || 'https://tyraki.vercel.app'}/cancel`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cancel`,
       metadata: {
         product: 'tyraki_premium_unlock',
       },
