@@ -649,6 +649,7 @@
                         session_id: sessionId,
                         analysisData: analysisData,
                     }),
+                    keepalive: true,  // Ensures request completes even if tab closes
                 });
 
                 const result = await response.json();
