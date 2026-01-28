@@ -348,47 +348,6 @@
             margin-top: 24px;
         }
 
-        /* Auto-close countdown */
-        .countdown-banner {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        .countdown-text {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
-        .countdown-number {
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .btn-keep-open {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-keep-open:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
         .close-message {
             text-align: center;
             padding: 16px;
@@ -520,17 +479,21 @@
 
                 // Show results
                 if (analysisData && analysisData.subscriptions && analysisData.subscriptions.length > 0) {
-                    showUnlockedResults(analysisData, result);
-                    // Clear the stored data after successful display
+                    // Clear the stored data
                     localStorage.removeItem('tyraki_pending_analysis');
                     // Notify original tab that payment was verified
                     localStorage.setItem('tyraki_payment_verified', 'true');
 
-                    // Send confirmation email (non-blocking)
+                    // Send confirmation email (non-blocking - will complete even if tab closes)
                     sendConfirmationEmail(sessionId, analysisData);
 
-                    // Start auto-close countdown
-                    startAutoCloseCountdown(5);
+                    // Close tab immediately
+                    window.close();
+
+                    // If window.close() is blocked by browser, show the results
+                    setTimeout(() => {
+                        showUnlockedResults(analysisData, result);
+                    }, 100);
                 } else {
                     showNoDataState(result);
                 }
@@ -598,13 +561,8 @@
                     </div>
                 </div>
 
-                <div id="countdown-container">
-                    <div class="countdown-banner">
-                        <span class="countdown-text">
-                            Αυτή η καρτέλα θα κλείσει σε <span id="countdown" class="countdown-number">5</span> δευτερόλεπτα...
-                        </span>
-                        <button class="btn-keep-open" onclick="cancelAutoClose()">Κράτα ανοιχτό</button>
-                    </div>
+                <div class="close-message">
+                    Μπορείς να κλείσεις αυτή την καρτέλα χειροκίνητα
                 </div>
 
                 <div id="email-status" class="email-status"></div>
@@ -674,9 +632,6 @@
             document.getElementById('content').innerHTML = html;
         }
 
-        // Auto-close timer reference
-        let autoCloseTimer = null;
-
         // Send confirmation email
         async function sendConfirmationEmail(sessionId, analysisData) {
             const emailStatusEl = document.getElementById('email-status');
@@ -711,61 +666,6 @@
                     emailStatusEl.textContent = 'Το email δεν στάλθηκε (θα έχεις πρόσβαση από την αρχική σελίδα)';
                     emailStatusEl.className = 'email-status error';
                 }
-            }
-        }
-
-        // Start auto-close countdown
-        function startAutoCloseCountdown(seconds) {
-            const countdownEl = document.getElementById('countdown');
-            if (!countdownEl) return;
-
-            let remaining = seconds;
-
-            autoCloseTimer = setInterval(() => {
-                remaining--;
-                countdownEl.textContent = remaining;
-
-                if (remaining <= 0) {
-                    clearInterval(autoCloseTimer);
-                    autoCloseTimer = null;
-
-                    // Try to close the tab
-                    window.close();
-
-                    // Fallback: show message if close is blocked
-                    setTimeout(() => {
-                        showCloseMessage();
-                    }, 500);
-                }
-            }, 1000);
-        }
-
-        // Cancel auto-close
-        function cancelAutoClose() {
-            if (autoCloseTimer) {
-                clearInterval(autoCloseTimer);
-                autoCloseTimer = null;
-            }
-
-            const container = document.getElementById('countdown-container');
-            if (container) {
-                container.innerHTML = `
-                    <div class="countdown-banner" style="justify-content: center;">
-                        <span class="countdown-text">Αυτόματο κλείσιμο ακυρώθηκε</span>
-                    </div>
-                `;
-            }
-        }
-
-        // Show close message when window.close() is blocked
-        function showCloseMessage() {
-            const container = document.getElementById('countdown-container');
-            if (container) {
-                container.innerHTML = `
-                    <div class="close-message">
-                        Μπορείς να κλείσεις αυτή την καρτέλα χειροκίνητα
-                    </div>
-                `;
             }
         }
 

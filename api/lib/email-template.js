@@ -90,7 +90,7 @@ function generateEmailHtml(data, unlockCode) {
   <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${COLORS.bgPrimary};">
     <tr>
       <td align="center" style="padding: 40px 20px;">
-        <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px;">
+        <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: ${COLORS.bgPrimary};">
 
           <!-- Logo -->
           <tr>

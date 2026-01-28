@@ -17,8 +17,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Always use canonical domain for cross-tab localStorage to work
-    const baseUrl = 'https://tyraki.vercel.app';
+    // Dynamic base URL: use request origin for preview deployments, fallback to production
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '').split('/').slice(0, 3).join('/');
+    const baseUrl = origin || 'https://tyraki.vercel.app';
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
