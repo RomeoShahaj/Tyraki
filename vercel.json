@@ -20,6 +20,10 @@
     {
       "source": "/api/webhook",
       "destination": "/api/webhook.js"
+    },
+    {
+      "source": "/api/send-email",
+      "destination": "/api/send-email.js"
     }
   ],
   "headers": [
